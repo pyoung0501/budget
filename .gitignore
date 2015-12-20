@@ -1,3 +1,5 @@
 BTQ/BTQ/obj/
 BTQ/BTQ/bin/
 *.suo
+BTQ/BTQUnitTests/bin/
+BTQ/BTQUnitTests/obj/
