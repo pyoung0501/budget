@@ -45,5 +45,74 @@ namespace BTQUnitTests
             // Assert
             Assert.AreEqual(InitialProfileName, profileName);
         }
+
+        [TestMethod]
+        public void creating_an_account_increases_number_of_accounts_by_one()
+        {
+            // Arrange
+            Profile profile = new Profile();
+
+            // Act
+            profile.CreateAccount("123");
+
+            // Assert
+            Assert.AreEqual(1, profile.Accounts.Count);
+        }
+
+        [TestMethod]
+        public void removing_an_account_by_id_decreases_number_of_accounts_by_one()
+        {
+            // Arrange
+            Profile profile = new Profile();
+            profile.CreateAccount("123");
+
+            // Act
+            profile.RemoveAccount("123");
+
+            // Assert
+            Assert.AreEqual(0, profile.Accounts.Count);
+        }
+
+        [TestMethod]
+        public void creating_an_account_with_an_id_matching_an_existing_one_does_not_increase_count()
+        {
+            // Arrange
+            Profile profile = new Profile();
+            profile.CreateAccount("123");
+
+            // Act
+            profile.CreateAccount("123");
+
+            // Assert
+            Assert.AreEqual(1, profile.Accounts.Count);
+        }
+
+        [TestMethod]
+        public void getting_an_account_by_id_not_in_profile_returns_null()
+        {
+            // Arrange
+            Profile profile = new Profile();
+
+            // Act
+            Account account = profile.GetAccount("123");
+
+            // Assert
+            Assert.AreEqual(null, account);
+        }
+
+        [TestMethod]
+        public void getting_an_account_by_id_existing_in_profile_returns_account()
+        {
+            // Arrange
+            Profile profile = new Profile();
+            profile.CreateAccount("123");
+
+            // Act
+            Account account = profile.GetAccount("123");
+
+            // Assert
+            Assert.AreNotEqual(null, account);
+            Assert.AreEqual("123", account.ID);
+        }
     }
 }
