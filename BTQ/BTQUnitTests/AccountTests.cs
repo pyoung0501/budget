@@ -57,5 +57,18 @@ namespace BTQUnitTests
             // Assert
             Assert.AreEqual("Account Institution", account.Institution);
         }
+
+        [TestMethod]
+        public void adding_transaction_to_account_increases_number_of_transactions_by_one()
+        {
+            // Arrange
+            Account account = new Account("123");
+
+            // Act
+            account.AddTransaction(new Transaction());
+
+            // Assert
+            Assert.AreEqual(1, account.Transactions.Count);
+        }
     }
 }
