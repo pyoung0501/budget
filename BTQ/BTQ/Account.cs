@@ -12,6 +12,8 @@ namespace BTQ
     public class Account
     {
         public string ID { get; set; }
+        public string Name { get; set; }
+        public string Institution { get; set; }
 
         /// <summary>
         /// Constructs an Account without an ID.

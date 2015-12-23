@@ -19,8 +19,8 @@ namespace BTQ
                 Console.Clear();
 
                 Console.WriteLine("--- Commands ----------");
-                Console.WriteLine("  create profile [id]");
-                Console.WriteLine("  list profiles");
+                Console.WriteLine("  create [profile|account]");
+                Console.WriteLine("  list [profiles|accounts]");
                 Console.WriteLine("  quit");
                 Console.WriteLine("-----------------------");
 
@@ -84,6 +84,37 @@ namespace BTQ
                 Console.Write("Press any key to continue...");
                 Console.ReadLine();
             }
+            else if(parameters[0] == "accounts")
+            {
+                Console.Clear();
+
+                if (_profiles.Count == 0)
+                {
+                    Console.WriteLine("<No profiles have been created>");
+                }
+                else
+                {
+                    foreach (Profile profile in _profiles)
+                    {
+                        Console.WriteLine("{0}: {1}", _profiles.IndexOf(profile), profile.Name);
+
+                        if(profile.Accounts.Count == 0)
+                        {
+                            Console.WriteLine("  <No accounts have been created in this profile>");
+                        }
+                        else
+                        {
+                            foreach(Account account in profile.Accounts)
+                            {
+                                Console.WriteLine("  {0}\t{1}\t{2}", account.Name, account.Institution, account.ID);
+                            }
+                        }
+                    }
+                }
+
+                Console.Write("Press any key to continue...");
+                Console.ReadLine();
+            }
         }
 
         private static void CreateObject(List<string> parameters)
@@ -99,6 +130,54 @@ namespace BTQ
                 Profile profile = new Profile() { Name = profileName };
                 _profiles.Add(profile);
             }
+            else if(parameters[0] == "account")
+            {
+                int selectedProfileIndex = DrawProfileSelection();
+
+                if (selectedProfileIndex >= 0 && selectedProfileIndex < _profiles.Count)
+                {
+                    Profile selectedProfile = _profiles[selectedProfileIndex];
+
+                    Console.Clear();
+                    Console.WriteLine(selectedProfile.Name);
+
+                    string name;
+                    string institution;
+                    string id;
+
+                    DrawFieldInput("Name", out name);
+                    DrawFieldInput("Institution", out institution);
+                    DrawFieldInput("ID", out id);
+
+                    selectedProfile.CreateAccount(id);
+                    Account account = selectedProfile.GetAccount(id);
+                    account.Name = name;
+                    account.Institution = institution;
+                }
+            }
+        }
+
+        private static int DrawProfileSelection()
+        {
+            int selection = -1;
+
+            Console.WriteLine("Select Profile:");
+            foreach (Profile profile in _profiles)
+            {
+                Console.WriteLine("  {0}: {1}", _profiles.IndexOf(profile), profile.Name);
+            }
+            Console.WriteLine(":");
+
+            string selectionText = Console.ReadLine();
+            int.TryParse(selectionText, out selection);
+
+            return selection;
+        }
+
+        private static void DrawFieldInput(string label, out string field)
+        {
+            Console.Write(label + ": ");
+            field = Console.ReadLine();
         }
     }
 }

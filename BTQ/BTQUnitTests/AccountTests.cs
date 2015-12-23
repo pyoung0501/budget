@@ -29,5 +29,33 @@ namespace BTQUnitTests
             // Assert
             Assert.AreEqual("123", account.ID);
         }
+
+        // Assign name
+        [TestMethod]
+        public void setting_name_on_account_sets_name()
+        {
+            // Arrange
+            Account account = new Account("123");
+
+            // Act
+            account.Name = "Account Name";
+
+            // Assert
+            Assert.AreEqual("Account Name", account.Name);
+        }
+
+        // Assign company
+        [TestMethod]
+        public void setting_company_on_account_sets_company()
+        {
+            // Arrange
+            Account account = new Account("123");
+
+            // Act
+            account.Institution = "Account Institution";
+
+            // Assert
+            Assert.AreEqual("Account Institution", account.Institution);
+        }
     }
 }
