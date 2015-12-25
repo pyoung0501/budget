@@ -3,3 +3,4 @@ BTQ/BTQ/bin/
 *.suo
 BTQ/BTQUnitTests/bin/
 BTQ/BTQUnitTests/obj/
+BTQ/packages/
