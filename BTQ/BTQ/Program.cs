@@ -12,6 +12,12 @@ namespace BTQ
     {
         private static List<Profile> _profiles = new List<Profile>();
 
+        private static Profile _currProfile;
+
+        private static Account _currAccount;
+        
+        private static List<Transaction> _sortedTransactions;
+
         static void Main(string[] args)
         {
             bool done = false;
@@ -20,13 +26,60 @@ namespace BTQ
             {
                 Console.Clear();
 
-                Console.WriteLine("--- Commands ----------");
-                Console.WriteLine("  create [profile|account|transaction]");
-                Console.WriteLine("  list [profiles|accounts|transactions]");
-                Console.WriteLine("  save");
-                Console.WriteLine("  load");
-                Console.WriteLine("  quit");
-                Console.WriteLine("-----------------------");
+                if(_currProfile == null)
+                {
+                    Console.WriteLine("--- Commands ----------");
+                    Console.WriteLine("  create profile");
+                    Console.WriteLine("  select profile");
+                    Console.WriteLine("  save/load/quit");
+                    Console.WriteLine("-----------------------");
+                }
+                else
+                {
+                    Console.WriteLine("+++++  {0} Profile  +++++", _currProfile.Name);
+
+                    if(_currAccount == null)
+                    {
+                        Console.WriteLine("--- Commands ----------");
+                        Console.WriteLine("  create account");
+                        Console.WriteLine("  select account");
+                        Console.WriteLine("  back/save/load/quit");
+                        Console.WriteLine("-----------------------");
+                    }
+                    else
+                    {
+                        Console.WriteLine("+++++  {0} Account  +++++", _currAccount.Name);
+
+                        if (_sortedTransactions == null)
+                        {
+                            Console.WriteLine("--- Commands ----------");
+                            Console.WriteLine("  create transaction");
+                            Console.WriteLine("  view transactions");
+                            Console.WriteLine("  back/save/load/quit");
+                            Console.WriteLine("-----------------------");
+                        }
+                        else
+                        {
+                            if(_sortedTransactions.Count == 0)
+                            {
+                                Console.WriteLine("  <No transactions>");
+                            }
+                            else
+                            {
+                                for (int iTrans = 0; iTrans < _sortedTransactions.Count; iTrans++)
+                                {
+                                    DrawTransaction(_sortedTransactions[iTrans]);
+                                }
+                            }
+
+                            Console.WriteLine("--- Commands ----------");
+                            Console.WriteLine("  sort [Field] [+|-]");
+                            Console.WriteLine("  clear sort");
+                            Console.WriteLine("  back/save/load/quit");
+                            Console.WriteLine("-----------------------");
+                        }
+                    }
+                }
 
                 string command = Console.ReadLine();
                 done = ProcessCommand(command);
@@ -56,9 +109,24 @@ namespace BTQ
                 CreateObject(parameters);
             }
 
-            if(commandName == "list")
+            if (commandName == "select")
             {
-                ListObject(parameters);
+                SelectObject(parameters);
+            }
+
+            if (commandName == "view")
+            {
+                _sortedTransactions = new List<Transaction>(_currAccount.Transactions);
+            }
+
+            if(commandName == "clear")
+            {
+                _sortedTransactions = null;
+            }
+
+            if(commandName == "sort")
+            {
+                SortTransactions(parameters);
             }
 
             if(commandName == "save")
@@ -71,7 +139,65 @@ namespace BTQ
                 LoadProfiles();
             }
 
+            if(commandName == "back")
+            {
+                if(_sortedTransactions != null)
+                {
+                    _sortedTransactions = null;
+                }
+                else if(_currAccount != null)
+                {
+                    _currAccount = null;
+                }
+                else if(_currProfile != null)
+                {
+                    _currProfile = null;
+                }
+            }
+
             return false;
+        }
+
+        private static void SortTransactions(List<string> parameters)
+        {
+            if(parameters.Count == 0)
+            {
+                return;
+            }
+
+            bool sortPayee = parameters[0].ToLower() == "payee";
+            bool sortDescription = parameters[0].ToLower() == "description";
+            bool sortAmount = parameters[0].ToLower() == "amount";
+            bool sortCategory = parameters[0].ToLower() == "category";
+            bool sortDate = parameters[0].ToLower() == "date";
+
+            bool ascending = (parameters.Count == 0) || (parameters.Count > 1 && parameters[1] == "+");
+
+            if (sortPayee)
+            {
+                _sortedTransactions.Sort((lhs, rhs) => { return lhs.Payee.CompareTo(rhs.Payee); });
+            }
+            else if (sortDescription)
+            {
+                _sortedTransactions.Sort((lhs, rhs) => { return lhs.Description.CompareTo(rhs.Description); });
+            }
+            else if (sortAmount)
+            {
+                _sortedTransactions.Sort((lhs, rhs) => { return lhs.Amount.CompareTo(rhs.Amount); });
+            }
+            else if (sortCategory)
+            {
+                _sortedTransactions.Sort((lhs, rhs) => { return lhs.Category.CompareTo(rhs.Category); });
+            }
+            else if (sortDate)
+            {
+                _sortedTransactions.Sort((lhs, rhs) => { return lhs.Date.CompareTo(rhs.Date); });
+            }
+
+            if(!ascending)
+            {
+                _sortedTransactions.Reverse();
+            }
         }
 
         private static void SaveProfiles()
@@ -206,71 +332,78 @@ namespace BTQ
             }
             else if(parameters[0] == "account")
             {
-                int selectedProfileIndex = DrawProfileSelection();
+                Console.Clear();
+                Console.WriteLine(_currProfile.Name);
 
-                if (selectedProfileIndex >= 0 && selectedProfileIndex < _profiles.Count)
-                {
-                    Profile selectedProfile = _profiles[selectedProfileIndex];
+                string name;
+                string institution;
+                string id;
 
-                    Console.Clear();
-                    Console.WriteLine(selectedProfile.Name);
+                DrawFieldInput("Name", out name);
+                DrawFieldInput("Institution", out institution);
+                DrawFieldInput("ID", out id);
 
-                    string name;
-                    string institution;
-                    string id;
-
-                    DrawFieldInput("Name", out name);
-                    DrawFieldInput("Institution", out institution);
-                    DrawFieldInput("ID", out id);
-
-                    selectedProfile.CreateAccount(id);
-                    Account account = selectedProfile.GetAccount(id);
-                    account.Name = name;
-                    account.Institution = institution;
-                }
+                _currProfile.CreateAccount(id);
+                Account account = _currProfile.GetAccount(id);
+                account.Name = name;
+                account.Institution = institution;
             }
             else if(parameters[0] == "transaction")
             {
-                int selectedProfileIndex = DrawProfileSelection();
-                if (selectedProfileIndex >= 0 && selectedProfileIndex < _profiles.Count)
+                Console.Clear();
+                Console.WriteLine(_currProfile.Name);
+                Console.WriteLine(_currAccount.Name);
+
+                string payee;
+                string description;
+                decimal amount;
+                string category;
+                DateTime date;
+
+                DrawFieldInput("Payee", out payee);
+                DrawFieldInput("Description", out description);
+                DrawFieldInput("Amount", out amount);
+                DrawFieldInput("Category", out category);
+                DrawFieldInput("Date", out date);
+
+                Transaction transaction = new Transaction()
                 {
-                    Profile selectedProfile = _profiles[selectedProfileIndex];
+                    Payee = payee,
+                    Description = description,
+                    Amount = amount,
+                    Category = category,
+                    Date = date
+                };
 
-                    Console.Clear();
-                    Console.WriteLine(selectedProfile.Name);
+                _currAccount.AddTransaction(transaction);
+            }
+        }
 
-                    int selectedAccountIndex = DrawAccountSelection(selectedProfile);
-                    if(selectedAccountIndex >= 0 && selectedAccountIndex < selectedProfile.Accounts.Count)
-                    {
-                        Account selectedAccount = selectedProfile.Accounts[selectedAccountIndex];
+        private static void SelectObject(List<string> parameters)
+        {
+            if(parameters.Count == 0)
+            {
+                return;
+            }
 
-                        Console.Clear();
-                        Console.WriteLine(selectedProfile.Name);
-                        Console.WriteLine(selectedAccount.Name);
+            if(parameters[0] == "profile")
+            {
+                Console.Clear();
 
-                        string payee;
-                        string description;
-                        decimal amount;
-                        string category;
-                        DateTime date;
+                int profileIndex = DrawProfileSelection();
+                if (profileIndex >= 0 && profileIndex < _profiles.Count)
+                {
+                    _currProfile = _profiles[profileIndex];
+                }
+            }
+            else if(parameters[0] == "account")
+            {
+                Console.Clear();
 
-                        DrawFieldInput("Payee", out payee);
-                        DrawFieldInput("Description", out description);
-                        DrawFieldInput("Amount", out amount);
-                        DrawFieldInput("Category", out category);
-                        DrawFieldInput("Date", out date);
-
-                        Transaction transaction = new Transaction()
-                        {
-                            Payee = payee,
-                            Description = description,
-                            Amount = amount,
-                            Category = category,
-                            Date = date
-                        };
-
-                        selectedAccount.AddTransaction(transaction);
-                    }
+                int accountIndex = DrawAccountSelection(_currProfile);
+                if(accountIndex >= 0 && accountIndex < _currProfile.Accounts.Count)
+                {
+                    _currAccount = _currProfile.Accounts[accountIndex];
                 }
             }
         }
@@ -302,7 +435,7 @@ namespace BTQ
             {
                 Console.WriteLine("  {0}: {1}", _profiles.IndexOf(profile), profile.Name);
             }
-            Console.WriteLine(":");
+            Console.Write(":");
 
             string selectionText = Console.ReadLine();
             int.TryParse(selectionText, out selection);
@@ -330,6 +463,13 @@ namespace BTQ
             DrawFieldInput(label, out input);
             
             DateTime.TryParse(input, out date);
+        }
+
+        private static void DrawTransaction(Transaction transaction)
+        {
+            Console.WriteLine("  {0}\t{1}\t{2}\t{3}\t{4}",
+                transaction.Date, transaction.Payee, transaction.Description,
+                transaction.Category, transaction.Amount);
         }
     }
 }
