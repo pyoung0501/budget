@@ -1,5 +1,4 @@
-﻿using money;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,7 +25,7 @@ namespace BTQ
         /// <summary>
         /// Amount of the transaction.
         /// </summary>
-        public Money Amount { get; set; }
+        public decimal Amount { get; set; }
 
         /// <summary>
         /// Category type (for budgeting).

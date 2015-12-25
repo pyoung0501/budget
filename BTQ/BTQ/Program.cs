@@ -1,6 +1,7 @@
-﻿using money;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +23,8 @@ namespace BTQ
                 Console.WriteLine("--- Commands ----------");
                 Console.WriteLine("  create [profile|account|transaction]");
                 Console.WriteLine("  list [profiles|accounts|transactions]");
+                Console.WriteLine("  save");
+                Console.WriteLine("  load");
                 Console.WriteLine("  quit");
                 Console.WriteLine("-----------------------");
 
@@ -58,7 +61,33 @@ namespace BTQ
                 ListObject(parameters);
             }
 
+            if(commandName == "save")
+            {
+                SaveProfiles();
+            }
+
+            if(commandName == "load")
+            {
+                LoadProfiles();
+            }
+
             return false;
+        }
+
+        private static void SaveProfiles()
+        {
+            using (StreamWriter stream = new StreamWriter("Profiles"))
+            {
+                stream.Write(JsonConvert.SerializeObject(_profiles, Formatting.Indented));
+            }
+        }
+
+        private static void LoadProfiles()
+        {
+            using (StreamReader stream = new StreamReader("Profiles"))
+            {
+                _profiles = JsonConvert.DeserializeObject(stream.ReadToEnd(), typeof(List<Profile>)) as List<Profile>;
+            }
         }
 
         private static void ListObject(List<string> parameters)
@@ -221,7 +250,7 @@ namespace BTQ
 
                         string payee;
                         string description;
-                        Money amount;
+                        decimal amount;
                         string category;
                         DateTime date;
 
@@ -287,15 +316,12 @@ namespace BTQ
             field = Console.ReadLine();
         }
 
-        private static void DrawFieldInput(string label, out Money amount)
+        private static void DrawFieldInput(string label, out decimal amount)
         {
             string input;
             DrawFieldInput(label, out input);
-
-            decimal decValue;
-            decimal.TryParse(input, out decValue);
-
-            amount = new Money(decValue);
+            
+            decimal.TryParse(input, out amount);
         }
 
         private static void DrawFieldInput(string label, out DateTime date)
