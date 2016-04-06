@@ -5,3 +5,12 @@ BTQ/BTQUnitTests/bin/
 BTQ/BTQUnitTests/obj/
 BTQ/packages/
 BTQU/BTQU/Library/
+BTQ/BTQLib/obj/
+BTQ/obj/
+*Assembly-CSharp-Editor.csproj
+BTQU/BTQU/Assembly-CSharp.csproj
+*BTQU.CSharp.Editor.csproj
+*BTQU.CSharp.csproj
+BTQU/BTQU/BTQU.sln
+BTQU/BTQU/Temp/
+BTQU/BTQU/Assets/Data/
