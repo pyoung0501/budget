@@ -1,4 +1,4 @@
-﻿using BTQ;
+﻿using BTQLib;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace BTQUnitTests
@@ -7,7 +7,7 @@ namespace BTQUnitTests
     public class AccountTests
     {
         [TestMethod]
-        public void creating_an_account_without_id_creates_the_account_without_id()
+        public void creating_an_account_without_name_creates_the_account_without_name()
         {
             // Arrange
 
@@ -15,11 +15,11 @@ namespace BTQUnitTests
             Account account = new Account();
 
             // Assert
-            Assert.AreEqual("", account.ID);
+            Assert.AreEqual("", account.Name);
         }
 
         [TestMethod]
-        public void creating_an_account_with_id_creates_account_with_id()
+        public void creating_an_account_with_name_creates_account_with_name()
         {
             // Arrange
 
@@ -27,7 +27,7 @@ namespace BTQUnitTests
             Account account = new Account("123");
 
             // Assert
-            Assert.AreEqual("123", account.ID);
+            Assert.AreEqual("123", account.Name);
         }
 
         // Assign name

@@ -1,4 +1,4 @@
-﻿using BTQ;
+﻿using BTQLib;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 

@@ -1,4 +1,4 @@
-﻿using BTQ;
+﻿using BTQLib;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace BTQUnitTests
@@ -60,7 +60,7 @@ namespace BTQUnitTests
         }
 
         [TestMethod]
-        public void removing_an_account_by_id_decreases_number_of_accounts_by_one()
+        public void removing_an_account_by_name_decreases_number_of_accounts_by_one()
         {
             // Arrange
             Profile profile = new Profile();
@@ -74,7 +74,7 @@ namespace BTQUnitTests
         }
 
         [TestMethod]
-        public void creating_an_account_with_an_id_matching_an_existing_one_does_not_increase_count()
+        public void creating_an_account_with_a_name_matching_an_existing_one_does_not_increase_count()
         {
             // Arrange
             Profile profile = new Profile();
@@ -88,7 +88,7 @@ namespace BTQUnitTests
         }
 
         [TestMethod]
-        public void getting_an_account_by_id_not_in_profile_returns_null()
+        public void getting_an_account_by_name_not_in_profile_returns_null()
         {
             // Arrange
             Profile profile = new Profile();
@@ -101,7 +101,7 @@ namespace BTQUnitTests
         }
 
         [TestMethod]
-        public void getting_an_account_by_id_existing_in_profile_returns_account()
+        public void getting_an_account_by_name_existing_in_profile_returns_account()
         {
             // Arrange
             Profile profile = new Profile();
@@ -112,7 +112,7 @@ namespace BTQUnitTests
 
             // Assert
             Assert.AreNotEqual(null, account);
-            Assert.AreEqual("123", account.ID);
+            Assert.AreEqual("123", account.Name);
         }
     }
 }

@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
-namespace BTQ
+
+namespace BTQLib
 {
     /// <summary>
     /// A financial account containing transactions.
@@ -12,14 +9,14 @@ namespace BTQ
     public class Account
     {
         /// <summary>
-        /// Account ID (tied to institution).
-        /// </summary>
-        public string ID { get; set; }
-
-        /// <summary>
         /// User assigned name of the account.
         /// </summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// Account Number (tied to institution).
+        /// </summary>
+        public string Number { get; set; }
 
         /// <summary>
         /// Name of institution account is associated with.
@@ -29,7 +26,7 @@ namespace BTQ
         /// <summary>
         /// Transactions within the account.
         /// </summary>
-        public IReadOnlyList<Transaction> Transactions
+        public IList<Transaction> Transactions
         {
             get { return _transactions; }
         }
@@ -42,20 +39,22 @@ namespace BTQ
         
 
         /// <summary>
-        /// Constructs an Account without an ID.
+        /// Constructs a blank Account.
         /// </summary>
         public Account()
         {
-            ID = "";
+            Name = "";
+            Number = "";
+            Institution = "";
         }
 
         /// <summary>
-        /// Constructs an Account with the given ID.
+        /// Constructs an Account with the given name.
         /// </summary>
-        /// <param name="id">ID of account.</param>
-        public Account(string id)
+        /// <param name="name">Name of account.</param>
+        public Account(string name)
         {
-            ID = id;
+            Name = name;
         }
 
         /// <summary>

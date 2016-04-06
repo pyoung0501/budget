@@ -59,6 +59,10 @@
     <Compile Include="TransactionTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BTQLib\BTQLib.csproj">
+      <Project>{b0018cf1-fb99-48b2-b61f-3d6fa2785210}</Project>
+      <Name>BTQLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\BTQ\BTQ.csproj">
       <Project>{095cbb84-c00f-4a1c-828d-b8bc3749b381}</Project>
       <Name>BTQ</Name>

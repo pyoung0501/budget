@@ -3,8 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using BTQLib;
 
 namespace BTQ
 {
@@ -262,7 +261,7 @@ namespace BTQ
                         {
                             foreach(Account account in profile.Accounts)
                             {
-                                Console.WriteLine("  {0}\t{1}\t{2}", account.Name, account.Institution, account.ID);
+                                Console.WriteLine("  {0}\t{1}\t{2}", account.Name, account.Institution, account.Number);
                             }
                         }
                     }
@@ -293,7 +292,7 @@ namespace BTQ
                         {
                             foreach (Account account in profile.Accounts)
                             {
-                                Console.WriteLine("  {0}\t{1}\t{2}", account.Name, account.Institution, account.ID);
+                                Console.WriteLine("  {0}\t{1}\t{2}", account.Name, account.Institution, account.Number);
 
                                 if(account.Transactions.Count == 0)
                                 {
@@ -337,14 +336,14 @@ namespace BTQ
 
                 string name;
                 string institution;
-                string id;
+                string number;
 
                 DrawFieldInput("Name", out name);
                 DrawFieldInput("Institution", out institution);
-                DrawFieldInput("ID", out id);
+                DrawFieldInput("Number", out number);
 
-                _currProfile.CreateAccount(id);
-                Account account = _currProfile.GetAccount(id);
+                _currProfile.CreateAccount(name);
+                Account account = _currProfile.GetAccount(name);
                 account.Name = name;
                 account.Institution = institution;
             }
