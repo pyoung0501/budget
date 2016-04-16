@@ -92,11 +92,7 @@ public class BTQEditor : EditorWindow
 
                         if (GUILayout.Button(profileName))
                         {
-                            Profile profile = LoadProfile(profileFile);
-                            if (profile != null)
-                            {
-                                _selectedProfile = profile;
-                            }
+                            SelectProfile(profileFile);
                         }
 
                         if (EditorUtilities.ContentWidthButton("-"))
@@ -187,8 +183,34 @@ public class BTQEditor : EditorWindow
     private void Initialize()
     {
         UpdateProfileList();
-        
+        SelectSingleProfileByDefault();
+
         _initialized = true;
+    }
+
+    /// <summary>
+    /// This will select a profile by default if there is
+    /// exactly one profile.
+    /// </summary>
+    private void SelectSingleProfileByDefault()
+    {
+        if(_profileFiles.Length == 1)
+        {
+            SelectProfile(_profileFiles[0]);
+        }
+    }
+
+    /// <summary>
+    /// Selects the profile specified by its filepath.
+    /// </summary>
+    /// <param name="profileFile">Filepath of a profile.</param>
+    private void SelectProfile(string profileFile)
+    {
+        Profile profile = LoadProfile(profileFile);
+        if (profile != null)
+        {
+            _selectedProfile = profile;
+        }
     }
 
     private void DrawAddProfile()

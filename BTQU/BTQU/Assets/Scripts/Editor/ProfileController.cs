@@ -14,6 +14,11 @@ public class ProfileController
     public ProfileController(Profile selectedProfile)
     {
         _selectedProfile = selectedProfile;
+
+        if(_selectedProfile.Accounts.Count == 1)
+        {
+            _selectedAccount = _selectedProfile.Accounts[0];
+        }
     }
 
     public void DrawView()
