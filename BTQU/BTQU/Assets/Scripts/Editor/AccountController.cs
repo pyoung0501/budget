@@ -1,21 +1,58 @@
-﻿using System;
-using BTQLib;
+﻿using BTQLib;
+using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+
 
 internal class AccountController
 {
     private Profile _profile;
-
     private Account _account;
-
     private Transaction _transactionToAdd;
+
+    /// <summary>
+    /// List of the transaction columns used for displaying transactions.
+    /// </summary>
+    private List<TransactionColumn> _transactionColumns = new List<TransactionColumn>();
+
+    /// <summary>
+    /// The column the transactions are sorted on.
+    /// </summary>
+    private TransactionColumn _sortedColumn;
+
+    /// <summary>
+    /// The sorted state of the sorted column.
+    /// </summary>
+    private SortedState _sortedState;
+
+    /// <summary>
+    /// The transactions sorted according to the sort state and column.
+    /// </summary>
+    private List<Transaction> _sortedTransactions;
 
     public AccountController(Profile profile, Account account)
     {
         _profile = profile;
         _account = account;
+
+        Initialize();
     }
+
+    /// <summary>
+    /// Initializes the account controller.
+    /// </summary>
+    private void Initialize()
+    {
+        _transactionColumns.Add(new DateColumn() { Width = 80.0f });
+        _transactionColumns.Add(new PayeeColumn() { Width = 300.0f });
+        _transactionColumns.Add(new DescriptionColumn() { Width = 300.0f });
+        _transactionColumns.Add(new CategoryColumn(_profile.BudgetCategories) { Width = 200.0f });
+        _transactionColumns.Add(new AmountColumn() { Width = 100.0f });
+
+        _sortedTransactions = new List<Transaction>(_account.Transactions);
+    }
+    
 
     public void DrawView()
     {
@@ -39,6 +76,8 @@ internal class AccountController
                     {
                         _account.AddTransaction(_transactionToAdd);
                         _transactionToAdd = null;
+
+                        UpdateSorting();
                     }
 
                     if(GUILayout.Button("Cancel"))
@@ -51,16 +90,15 @@ internal class AccountController
             else
             {
                 DrawTransactionColumnHeaders();
-
-                // Transactions
-                foreach(Transaction transaction in _account.Transactions)
+                
+                foreach(Transaction transaction in _sortedTransactions)
                 {
                     DrawTransaction(transaction);
                 }
 
                 if (EditorUtilities.ContentWidthButton("+ Transaction"))
                 {
-                    _account.AddTransaction(new Transaction() { Date = DateTime.Now });
+                    _transactionToAdd = new Transaction() { Date = DateTime.Now };
                 }
             }
         }
@@ -71,140 +109,126 @@ internal class AccountController
     {
         EditorGUILayout.BeginHorizontal();
         {
-            EditorGUILayout.LabelField("Date", GUILayout.Width(80.0f));
-            EditorGUILayout.LabelField("Payee", GUILayout.Width(300.0f));
-            EditorGUILayout.LabelField("Description", GUILayout.Width(300.0f));
-            EditorGUILayout.LabelField("Category", GUILayout.Width(200.0f));
-            EditorGUILayout.LabelField("Amount", GUILayout.Width(100.0f));
+            foreach (TransactionColumn column in _transactionColumns)
+            {
+                DrawColumnHeading(column);
+            }
         }
         EditorGUILayout.EndHorizontal();
+    }
+
+    /// <summary>
+    /// Draws the heading for the given column.
+    /// </summary>
+    /// <param name="column">Column to draw heading for.</param>
+    private void DrawColumnHeading(TransactionColumn column)
+    {
+        SortedState sortedState = (_sortedColumn == column) ? _sortedState : SortedState.None;
+        bool pressed = DrawColumnHeading(column.DisplayName, sortedState, column.Width);
+        if(pressed)
+        {
+            if(column != _sortedColumn)
+            {
+                _sortedColumn = column;
+                _sortedState = SortedState.Ascending;
+            }
+            else
+            {
+                if(_sortedState == SortedState.None)
+                {
+                    _sortedState = SortedState.Ascending;
+                }
+                else if(_sortedState == SortedState.Ascending)
+                {
+                    _sortedState = SortedState.Descending;
+                }
+                else
+                {
+                    _sortedState = SortedState.None;
+                }
+            }
+
+            UpdateSorting();
+        }
+    }
+
+    /// <summary>
+    /// Draws a column heading as a button with the given label, sorted state and width.
+    /// Return value is true if the button was pressed.
+    /// </summary>
+    /// <param name="label">Column label.</param>
+    /// <param name="sortedState">Column's sorted state.</param>
+    /// <param name="width">Width of the column.</param>
+    /// <returns>True if the heading button was pressed.</returns>
+    private bool DrawColumnHeading(string label, SortedState sortedState, float width)
+    {
+        string stateIndicator = GetStateIndicator(sortedState);
+        string fullLabel = string.Concat(label, " ", stateIndicator);
+
+        return GUILayout.Button(fullLabel, GUILayout.Width(width));
+    }
+
+    /// <summary>
+    /// Gets the indicator to use for the given sorted state.
+    /// </summary>
+    /// <param name="sortedState">Sorted state.</param>
+    /// <returns>The indicator to use for the given sorted state.</returns>
+    private string GetStateIndicator(SortedState sortedState)
+    {
+        if (sortedState == SortedState.Ascending) return "▲";
+        if (sortedState == SortedState.Descending) return "▼";
+
+        return "";
     }
 
     private void DrawTransaction(Transaction transaction)
     {
         EditorGUILayout.BeginHorizontal();
         {
-            DrawDate(transaction);
-            transaction.Payee = EditorGUILayout.TextField(transaction.Payee, GUILayout.Width(300.0f));
-            transaction.Description = EditorGUILayout.TextField(transaction.Description, GUILayout.Width(300.0f));
-            DrawCategory(transaction);
-            DrawAmount(transaction);
-        }
-        EditorGUILayout.EndHorizontal();
-    }
-
-    private void DrawDate(Transaction transaction)
-    {
-        string prevDate = transaction.Date.ToString("MM/dd/yyyy");
-        string currDate = EditorGUILayout.TextField(prevDate, GUILayout.Width(80.0f));
-
-        if (currDate != prevDate)
-        {
-            DateTime newDate;
-            if (DateTime.TryParse(currDate, out newDate))
+            foreach (TransactionColumn column in _transactionColumns)
             {
-                transaction.Date = newDate;
-            }
-        }
-    }
-
-    private void DrawCategory(Transaction transaction)
-    {
-        EditorGUILayout.BeginHorizontal(GUILayout.Width(200.0f));
-        {
-            string prevCategory = transaction.Category;
-            string currCategory = EditorGUILayout.TextField(prevCategory);
-            if (currCategory != null)
-            {
-                string primaryCategory;
-                string secondaryCategory;
-                GetPrimaryAndSecondaryCatetories(currCategory, out primaryCategory, out secondaryCategory);
-
-                if (secondaryCategory == "")
-                {
-                    transaction.Category = primaryCategory;
-                }
-                else
-                {
-                    transaction.Category = string.Format("{0}:{1}", primaryCategory, secondaryCategory);
-                }
-
-                // Show Button if
-                //  primaryCategory is non-empty
-                //  and primaryCategory does not yet exist
-                //  or secondaryCategory is non-empty and secondaryCategory does not yet exist
-
-                bool showButton = primaryCategory != ""
-                              && (!_profile.BudgetCategories.PrimaryCategoryExists(primaryCategory)
-                               || (secondaryCategory != "" && !_profile.BudgetCategories.SecondaryCategoryExists(primaryCategory, secondaryCategory)));
-                if (showButton)
-                {
-                    if (EditorUtilities.ContentWidthButton("+"))
-                    {
-                        if (!_profile.BudgetCategories.PrimaryCategoryExists(primaryCategory))
-                        {
-                            _profile.BudgetCategories.AddPrimaryCategory(primaryCategory);
-                        }
-
-                        if (secondaryCategory != "" && !_profile.BudgetCategories.SecondaryCategoryExists(primaryCategory, secondaryCategory))
-                        {
-                            _profile.BudgetCategories.AddSecondaryCategory(primaryCategory, secondaryCategory);
-                        }
-                    }
-                }
+                column.Draw(transaction);
             }
         }
         EditorGUILayout.EndHorizontal();
     }
 
-    private void GetPrimaryAndSecondaryCatetories(string currCategory, out string primaryCategory, out string secondaryCategory)
+    /// <summary>
+    /// Updates the sorting of the transactions.  If there is no column
+    /// the data is sorted on, the transactions will remain in the order
+    /// in which they were entered into the account.
+    /// </summary>
+    private void UpdateSorting()
     {
-        string[] categories = currCategory.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
-        if(categories.Length == 0)
+        _sortedTransactions = new List<Transaction>(_account.Transactions);
+
+        if (_sortedColumn != null && _sortedState != SortedState.None)
         {
-            primaryCategory = "";
-            secondaryCategory = "";
-        }
-        else if(categories.Length == 1)
-        {
-            primaryCategory = categories[0];
-            secondaryCategory = "";
-        }
-        else
-        {
-            primaryCategory = categories[0];
-            secondaryCategory = categories[1];
-        }
-    }
-
-    GUIStyle rightAlignTextField;
-    private void DrawAmount(Transaction transaction)
-    {
-        //EditorGUILayout.LabelField(transaction.Amount.ToString());
-
-        if (rightAlignTextField == null)
-        {
-            rightAlignTextField = new GUIStyle(GUI.skin.textField);
-            rightAlignTextField.alignment = TextAnchor.MiddleRight;
-        }
-
-        string prevVal = transaction.Amount.ToString("C2");
-
-        string newVal = EditorGUILayout.TextField(prevVal, rightAlignTextField, GUILayout.Width(100.0f));
-        
-        if(newVal != prevVal)
-        {
-            newVal = newVal.Replace("$", "");
-
-            //TextEditor te = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
-
-            decimal amount;
-            if(decimal.TryParse(newVal, out amount))
+            if (_sortedColumn is DateColumn)
             {
-                amount = Math.Round(amount, 2, MidpointRounding.ToEven);
-                transaction.Amount = amount;
+                _sortedTransactions.Sort((lhs, rhs) => lhs.Date.CompareTo(rhs.Date));
+            }
+            else if (_sortedColumn is PayeeColumn)
+            {
+                _sortedTransactions.Sort((lhs, rhs) => string.Compare(lhs.Payee, rhs.Payee));
+            }
+            else if (_sortedColumn is DescriptionColumn)
+            {
+                _sortedTransactions.Sort((lhs, rhs) => string.Compare(lhs.Description, rhs.Description));
+            }
+            else if (_sortedColumn is CategoryColumn)
+            {
+                _sortedTransactions.Sort((lhs, rhs) => string.Compare(lhs.Category, rhs.Category));
+            }
+            else if (_sortedColumn is AmountColumn)
+            {
+                _sortedTransactions.Sort((lhs, rhs) => lhs.Amount.CompareTo(rhs.Amount));
+            }
+
+            if (_sortedState == SortedState.Descending)
+            {
+                _sortedTransactions.Reverse();
             }
         }
-
     }
 }
