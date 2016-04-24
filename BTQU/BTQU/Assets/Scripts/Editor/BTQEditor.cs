@@ -127,8 +127,15 @@ public class BTQEditor : EditorWindow
 
     private void UpdateProfileList()
     {
-        string[] profileFiles = Directory.GetFiles(Common.ProfilesDirectory);
-        _profileFiles = profileFiles.Where((fileName) => fileName.EndsWith(".profile")).ToArray();
+        if (Directory.Exists(Common.ProfilesDirectory))
+        {
+            string[] profileFiles = Directory.GetFiles(Common.ProfilesDirectory);
+            _profileFiles = profileFiles.Where((fileName) => fileName.EndsWith(".profile")).ToArray();
+        }
+        else
+        {
+            _profileFiles = new string[0];
+        }
     }
 
     private void DrawSelectedProfile()
