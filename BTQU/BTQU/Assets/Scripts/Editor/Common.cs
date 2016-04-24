@@ -14,7 +14,7 @@ namespace BTQ
 
             using (StreamWriter stream = new StreamWriter(Common.ProfilesDirectory + "/" + profile.Name + ".profile"))
             {
-                stream.Write(JsonConvert.SerializeObject(profile, Formatting.Indented));
+                stream.Write(JsonConvert.SerializeObject(profile, Formatting.Indented, new JsonSerializerSettings(){ DateTimeZoneHandling = DateTimeZoneHandling.Utc }));
             }
         }
     }
