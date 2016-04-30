@@ -1,6 +1,7 @@
 ﻿using BTQLib;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -206,23 +207,23 @@ internal class AccountController
         {
             if (_sortedColumn is DateColumn)
             {
-                _sortedTransactions.Sort((lhs, rhs) => lhs.Date.CompareTo(rhs.Date));
+                _sortedTransactions = _sortedTransactions.OrderBy(item => item.Date).ToList();
             }
             else if (_sortedColumn is PayeeColumn)
             {
-                _sortedTransactions.Sort((lhs, rhs) => string.Compare(lhs.Payee, rhs.Payee));
+                _sortedTransactions = _sortedTransactions.OrderBy(item => item.Payee).ToList();
             }
             else if (_sortedColumn is DescriptionColumn)
             {
-                _sortedTransactions.Sort((lhs, rhs) => string.Compare(lhs.Description, rhs.Description));
+                _sortedTransactions = _sortedTransactions.OrderBy(item => item.Description).ToList();
             }
             else if (_sortedColumn is CategoryColumn)
             {
-                _sortedTransactions.Sort((lhs, rhs) => string.Compare(lhs.Category, rhs.Category));
+                _sortedTransactions = _sortedTransactions.OrderBy(item => item.Category).ToList();
             }
             else if (_sortedColumn is AmountColumn)
             {
-                _sortedTransactions.Sort((lhs, rhs) => lhs.Amount.CompareTo(rhs.Amount));
+                _sortedTransactions = _sortedTransactions.OrderBy(item => item.Amount).ToList();
             }
 
             if (_sortedState == SortedState.Descending)
