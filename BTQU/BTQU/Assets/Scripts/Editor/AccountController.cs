@@ -1,4 +1,5 @@
-﻿using BTQLib;
+﻿using BTQ;
+using BTQLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,11 @@ using UnityEngine;
 
 internal class AccountController
 {
+    /// <summary>
+    /// Width of the balance column.
+    /// </summary>
+    private const float BalanceColumnWidth = 100.0f;
+
     private Profile _profile;
     private Account _account;
     private Transaction _transactionToAdd;
@@ -74,12 +80,12 @@ internal class AccountController
             _account.Number = EditorGUILayout.TextField("Account No.", _account.Number);
         }
         EditorGUILayout.EndVertical();
-
+        
         EditorGUILayout.BeginVertical();
         {
             if(_transactionToAdd != null)
             {
-                DrawTransaction(_transactionToAdd);
+                DrawTransaction(_transactionToAdd, null);
 
                 EditorGUILayout.BeginHorizontal();
                 {
@@ -101,10 +107,13 @@ internal class AccountController
             else
             {
                 DrawTransactionColumnHeaders();
-                
+
+                decimal balance = 0;
                 foreach(Transaction transaction in _sortedTransactions)
                 {
-                    DrawTransaction(transaction);
+                    balance += transaction.Amount;
+                    
+                    DrawTransaction(transaction, balance);
                 }
 
                 if (EditorUtilities.ContentWidthButton("+ Transaction"))
@@ -124,6 +133,8 @@ internal class AccountController
             {
                 DrawColumnHeading(column);
             }
+
+            EditorGUILayout.LabelField("Balance", Styles.CenterJustifiedLabel, GUILayout.Width(BalanceColumnWidth));
         }
         EditorGUILayout.EndHorizontal();
     }
@@ -339,13 +350,27 @@ internal class AccountController
         }
     }
 
-    private void DrawTransaction(Transaction transaction)
+    /// <summary>
+    /// Draws the given transaction with optional balance.
+    /// </summary>
+    /// <param name="transaction">Transaction to draw.</param>
+    /// <param name="balance">Optional balance.</param>
+    private void DrawTransaction(Transaction transaction, decimal? balance)
     {
         EditorGUILayout.BeginHorizontal();
         {
             foreach (TransactionColumn column in _transactionColumns)
             {
                 column.Draw(transaction);
+            }
+
+            if(balance.HasValue)
+            {
+                GUI.enabled = false;
+                EditorGUILayout.TextField(balance.Value.ToString("C2"),
+                                          Styles.RightAlignedTextField,
+                                          GUILayout.Width(BalanceColumnWidth));
+                GUI.enabled = true;
             }
         }
         EditorGUILayout.EndHorizontal();

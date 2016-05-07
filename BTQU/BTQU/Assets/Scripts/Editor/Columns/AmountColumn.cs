@@ -1,4 +1,5 @@
-﻿using BTQLib;
+﻿using BTQ;
+using BTQLib;
 using System;
 using UnityEditor;
 using UnityEngine;
@@ -9,11 +10,6 @@ using UnityEngine;
 public class AmountColumn : TransactionColumn
 {
     /// <summary>
-    /// Style for drawing a right aligned text field.
-    /// </summary>
-    private static GUIStyle _rightAlignedTextField;
-
-    /// <summary>
     /// Display name of the column.
     /// </summary>
     public override string DisplayName { get { return "Amount"; } }
@@ -23,16 +19,9 @@ public class AmountColumn : TransactionColumn
     /// </summary>
     /// <param name="transaction">Transaction to draw.</param>
     public override void Draw(Transaction transaction)
-    {
-        // Initialize style
-        if (_rightAlignedTextField == null)
-        {
-            _rightAlignedTextField = new GUIStyle(GUI.skin.textField);
-            _rightAlignedTextField.alignment = TextAnchor.MiddleRight;
-        }
-        
+    {       
         string prevVal = transaction.Amount.ToString("C2");
-        string newVal = EditorGUILayout.TextField(prevVal, _rightAlignedTextField, GUILayout.Width(Width));
+        string newVal = EditorGUILayout.TextField(prevVal, Styles.RightAlignedTextField, GUILayout.Width(Width));
         
         if (newVal != prevVal)
         {
