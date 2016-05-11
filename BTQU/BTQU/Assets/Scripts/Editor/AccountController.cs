@@ -2,6 +2,7 @@
 using BTQLib;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -123,6 +124,31 @@ internal class AccountController
             }
         }
         EditorGUILayout.EndVertical();
+
+        GUILayout.FlexibleSpace();
+
+        EditorGUILayout.BeginHorizontal("box");
+        {
+            if(EditorUtilities.ContentWidthButton("Import"))
+            {
+                string importDir = EditorPrefs.GetString("BTQU_ImportDir");
+                string importFile = EditorUtility.OpenFilePanel("Import", importDir, "csv");
+                if(!string.IsNullOrEmpty(importFile))
+                {
+                    importDir = Path.GetDirectoryName(importFile);
+                    EditorPrefs.SetString("BTQU_ImportDir", importDir);
+                }
+
+                ImportTransactions(importFile);
+            }
+
+            GUILayout.FlexibleSpace();
+        }
+        EditorGUILayout.EndHorizontal();
+    }
+
+    private void ImportTransactions(string filePath)
+    {
     }
 
     private void DrawTransactionColumnHeaders()
