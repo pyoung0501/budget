@@ -8,7 +8,7 @@ using UnityEditor;
 using UnityEngine;
 
 
-internal class AccountController
+public class AccountController
 {
     /// <summary>
     /// Width of the balance column.
@@ -137,20 +137,17 @@ internal class AccountController
                 {
                     importDir = Path.GetDirectoryName(importFile);
                     EditorPrefs.SetString("BTQU_ImportDir", importDir);
-                }
 
-                ImportTransactions(importFile);
+                    TransactionImporter importer = new TransactionImporter();
+                    importer.Import(importFile);
+                }
             }
 
             GUILayout.FlexibleSpace();
         }
         EditorGUILayout.EndHorizontal();
     }
-
-    private void ImportTransactions(string filePath)
-    {
-    }
-
+    
     private void DrawTransactionColumnHeaders()
     {
         EditorGUILayout.BeginHorizontal();
