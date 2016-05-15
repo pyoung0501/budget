@@ -139,7 +139,7 @@ public class AccountController
                     EditorPrefs.SetString("BTQU_ImportDir", importDir);
 
                     TransactionImporter importer = new TransactionImporter();
-                    importer.Import(importFile);
+                    importer.Import(importFile, _account, OnImportTransactions);
                 }
             }
 
@@ -147,7 +147,21 @@ public class AccountController
         }
         EditorGUILayout.EndHorizontal();
     }
-    
+
+    /// <summary>
+    /// Handles importing the given transactions.
+    /// </summary>
+    /// <param name="transactions">Transactions to import.</param>
+    private void OnImportTransactions(Transaction[] transactions)
+    {
+        foreach(Transaction transaction in transactions)
+        {
+            _account.AddTransaction(transaction);
+        }
+
+        UpdateSorting();
+    }
+
     private void DrawTransactionColumnHeaders()
     {
         EditorGUILayout.BeginHorizontal();

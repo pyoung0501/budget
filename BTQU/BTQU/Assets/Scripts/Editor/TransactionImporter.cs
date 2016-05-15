@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using BTQLib;
+using System;
+using System.IO;
 using UnityEngine;
 
 /// <summary>
@@ -22,7 +24,8 @@ public class TransactionImporter
     /// Imports the transactions contained in the given file.
     /// </summary>
     /// <param name="filePath">File to import.</param>
-    public void Import(string filePath)
+    /// <param name="account">Account to import into.</param>
+    public void Import(string filePath, Account account, Action<Transaction[]> onImport)
     {
         string fileFields = null;
         using (StreamReader reader = new StreamReader(filePath))
@@ -53,7 +56,7 @@ public class TransactionImporter
                     record.description = record.description.Trim(' ', '\"');
                 }
 
-                ImportEditor.Open(records);
+                ImportEditor.Open(account, records, onImport);
             }
         }
         else if (fileFields == DebitAccountFieldsHeader)
@@ -79,7 +82,7 @@ public class TransactionImporter
                     record.description = record.description.Trim(' ', '\"');
                 }
 
-                ImportEditor.Open(records);
+                ImportEditor.Open(account, records, onImport);
             }
         }
         else
