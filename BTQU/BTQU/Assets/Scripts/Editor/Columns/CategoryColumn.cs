@@ -9,17 +9,17 @@ using UnityEngine;
 public class CategoryColumn : TransactionColumn
 {
     /// <summary>
-    /// Reference to the budget categories for an account.
+    /// Reference to the transaction categories for an account.
     /// </summary>
-    private BudgetCategories _budgetCategories;
+    private Categories _categories;
 
     /// <summary>
     /// Constructor.
     /// </summary>
-    /// <param name="budgetCategories">An account's budget categories.</param>
-    public CategoryColumn(BudgetCategories budgetCategories)
+    /// <param name="categories">An account's transaction categories.</param>
+    public CategoryColumn(Categories categories)
     {
-        _budgetCategories = budgetCategories;
+        _categories = categories;
     }
 
     /// <summary>
@@ -59,22 +59,22 @@ public class CategoryColumn : TransactionColumn
                 //  and primaryCategory does not yet exist
                 //  or secondaryCategory is non-empty and secondaryCategory does not yet exist
                 bool showButton = !string.IsNullOrEmpty(primaryCategory)
-                              && (!_budgetCategories.PrimaryCategoryExists(primaryCategory)
-                               || (secondaryCategory != "" && !_budgetCategories.SecondaryCategoryExists(primaryCategory, secondaryCategory)));
+                              && (!_categories.PrimaryCategoryExists(primaryCategory)
+                               || (secondaryCategory != "" && !_categories.SecondaryCategoryExists(primaryCategory, secondaryCategory)));
                 if (showButton)
                 {
                     if (EditorUtilities.ContentWidthButton("+"))
                     {
                         // Add primary if it doesn't exist
-                        if (!_budgetCategories.PrimaryCategoryExists(primaryCategory))
+                        if (!_categories.PrimaryCategoryExists(primaryCategory))
                         {
-                            _budgetCategories.AddPrimaryCategory(primaryCategory);
+                            _categories.AddPrimaryCategory(primaryCategory);
                         }
 
                         // Add secondary if it doesn't exist and it is valid
-                        if (secondaryCategory != "" && !_budgetCategories.SecondaryCategoryExists(primaryCategory, secondaryCategory))
+                        if (secondaryCategory != "" && !_categories.SecondaryCategoryExists(primaryCategory, secondaryCategory))
                         {
-                            _budgetCategories.AddSecondaryCategory(primaryCategory, secondaryCategory);
+                            _categories.AddSecondaryCategory(primaryCategory, secondaryCategory);
                         }
                     }
                 }

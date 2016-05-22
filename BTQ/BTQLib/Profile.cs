@@ -20,19 +20,19 @@ namespace BTQLib
         private List<Account> _accounts = new List<Account>();
 
         /// <summary>
+        /// Object managing the transaction categories.
+        /// </summary>
+        private Categories _categories = new Categories();
+
+        /// <summary>
         /// Accounts contained in the profile.
         /// </summary>
-        public IList<Account> Accounts
-        {
-            get
-            {
-                return _accounts;
-            }
-        }
+        public IList<Account> Accounts { get { return _accounts; } }
 
-        private BudgetCategories _budgetCategories = new BudgetCategories();
-
-        public BudgetCategories BudgetCategories { get { return _budgetCategories; } }
+        /// <summary>
+        /// Object managing the transaction categories.
+        /// </summary>
+        public Categories Categories { get { return _categories; } }
         
 
         /// <summary>
@@ -74,81 +74,6 @@ namespace BTQLib
         public Account GetAccount(string accountName)
         {
             return _accounts.Find(account => account.Name == accountName);
-        }
-    }
-
-    public class BudgetCategories
-    {
-        private List<string> _fullyQualifiedCategories;
-
-        private List<string> _primaryCategories = new List<string>();
-
-        public List<string> PrimaryCategories { get { return _primaryCategories; } }
-
-        private List<List<string>> _secondaryCategories = new List<List<string>>();
-
-        public List<List<string>> SecondaryCategories { get { return _secondaryCategories; } }
-
-        public List<string> GetPrimaryCategories()
-        {
-            return _primaryCategories;
-        }
-
-        public List<string> GetSecondaryCategories(string primaryCategory)
-        {
-            int index = _primaryCategories.BinarySearch(primaryCategory);
-            if(index >= 0)
-            {
-                return _secondaryCategories[index];
-            }
-
-            return null;
-        }
-
-        public void AddPrimaryCategory(string category)
-        {
-            int index = _primaryCategories.BinarySearch(category);
-            if(index >= 0)
-            {
-                return;
-            }
-
-            _primaryCategories.Insert(~index, category);
-            _secondaryCategories.Insert(~index, new List<string>());
-        }
-
-        public bool PrimaryCategoryExists(string category)
-        {
-            return _primaryCategories.BinarySearch(category) >= 0;
-        }
-
-        public void AddSecondaryCategory(string primaryCategory, string secondaryCategory)
-        {
-            if(!PrimaryCategoryExists(primaryCategory))
-            {
-                AddPrimaryCategory(primaryCategory);
-            }
-
-            int primaryIndex = _primaryCategories.BinarySearch(primaryCategory);
-            int secondaryIndex = _secondaryCategories[primaryIndex].BinarySearch(secondaryCategory);
-            if(secondaryIndex >= 0)
-            {
-                return;
-            }
-
-            _secondaryCategories[primaryIndex].Insert(~secondaryIndex, secondaryCategory);
-        }
-
-        public bool SecondaryCategoryExists(string primaryCategory, string secondaryCategory)
-        {
-            int primaryIndex = _primaryCategories.BinarySearch(primaryCategory);
-            if (primaryIndex >= 0)
-            {
-                int secondaryIndex = _secondaryCategories[primaryIndex].BinarySearch(secondaryCategory);
-                return secondaryIndex >= 0;
-            }
-
-            return false;
         }
     }
 }

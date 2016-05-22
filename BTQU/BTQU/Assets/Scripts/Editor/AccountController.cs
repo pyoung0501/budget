@@ -65,7 +65,7 @@ public class AccountController
         _transactionColumns.Add(new DateColumn() { Width = 80.0f });
         _transactionColumns.Add(new PayeeColumn() { Width = 300.0f });
         _transactionColumns.Add(new DescriptionColumn() { Width = 300.0f });
-        _transactionColumns.Add(new CategoryColumn(_profile.BudgetCategories) { Width = 200.0f });
+        _transactionColumns.Add(new CategoryColumn(_profile.Categories) { Width = 200.0f });
         _transactionColumns.Add(new AmountColumn() { Width = 100.0f });
 
         _sortedTransactions = new List<Transaction>(_account.Transactions);
