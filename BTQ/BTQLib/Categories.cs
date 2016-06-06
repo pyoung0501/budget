@@ -15,10 +15,20 @@ namespace BTQLib
         private List<string> _primaryCategories = new List<string>();
 
         /// <summary>
+        /// The list of primary categories.
+        /// </summary>
+        public List<string> PrimaryCategories { get { return _primaryCategories; } }
+
+        /// <summary>
         /// The lists of secondary categories corresponding to each primary category.
         /// </summary>
         private List<List<string>> _secondaryCategories = new List<List<string>>();
-        
+
+        /// <summary>
+        /// The lists of secondary categories corresponding to each primary category.
+        /// </summary>
+        public List<List<string>> SecondaryCategories { get { return _secondaryCategories; } }
+
         /// <summary>
         /// Gets the list of primary categories.
         /// </summary>

@@ -20,14 +20,14 @@ namespace BTQLib
         private List<Account> _accounts = new List<Account>();
 
         /// <summary>
-        /// Object managing the transaction categories.
-        /// </summary>
-        private Categories _categories = new Categories();
-
-        /// <summary>
         /// Accounts contained in the profile.
         /// </summary>
         public IList<Account> Accounts { get { return _accounts; } }
+
+        /// <summary>
+        /// Object managing the transaction categories.
+        /// </summary>
+        private Categories _categories = new Categories();
 
         /// <summary>
         /// Object managing the transaction categories.
