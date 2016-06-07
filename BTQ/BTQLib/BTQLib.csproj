@@ -37,11 +37,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Account.cs" />
+    <Compile Include="Budget.cs" />
     <Compile Include="Categories.cs" />
+    <Compile Include="MonthlyBudget.cs" />
     <Compile Include="Profile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Transaction.cs" />
+    <Compile Include="Util\Tuples.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /Y "$(TargetPath)" "$(SolutionDir)..\BTQU\BTQU\Assets\$(ProjectName)\$(TargetName).dll"</PostBuildEvent>
