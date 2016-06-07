@@ -12,20 +12,29 @@ namespace BTQLib
         /// <summary>
         /// The list of primary categories.
         /// </summary>
-        private List<string> _primaryCategories = new List<string>();
+        public List<string> PrimaryCategories { get; set; }
 
         /// <summary>
         /// The lists of secondary categories corresponding to each primary category.
         /// </summary>
-        private List<List<string>> _secondaryCategories = new List<List<string>>();
-        
+        private List<List<string>> SecondaryCategories { get; set; }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public Categories()
+        {
+            PrimaryCategories = new List<string>();
+            SecondaryCategories = new List<List<string>>();
+        }
+
         /// <summary>
         /// Gets the list of primary categories.
         /// </summary>
         /// <returns>The list of primary categories.</returns>
         public List<string> GetPrimaryCategories()
         {
-            return _primaryCategories;
+            return PrimaryCategories;
         }
 
         /// <summary>
@@ -35,10 +44,10 @@ namespace BTQLib
         /// <returns>The secondary categories of the given primary category.</returns>
         public List<string> GetSecondaryCategories(string primaryCategory)
         {
-            int index = _primaryCategories.BinarySearch(primaryCategory);
+            int index = PrimaryCategories.BinarySearch(primaryCategory);
             if (index >= 0)
             {
-                return _secondaryCategories[index];
+                return SecondaryCategories[index];
             }
 
             return null;
@@ -51,14 +60,14 @@ namespace BTQLib
         /// <param name="primaryCategory">Category to add as primary.</param>
         public void AddPrimaryCategory(string primaryCategory)
         {
-            int index = _primaryCategories.BinarySearch(primaryCategory);
+            int index = PrimaryCategories.BinarySearch(primaryCategory);
             if (index >= 0)
             {
                 return;
             }
 
-            _primaryCategories.Insert(~index, primaryCategory);
-            _secondaryCategories.Insert(~index, new List<string>());
+            PrimaryCategories.Insert(~index, primaryCategory);
+            SecondaryCategories.Insert(~index, new List<string>());
         }
 
         /// <summary>
@@ -68,7 +77,7 @@ namespace BTQLib
         /// <returns>True if the given primary category exists.</returns>
         public bool PrimaryCategoryExists(string primaryCategory)
         {
-            return _primaryCategories.BinarySearch(primaryCategory) >= 0;
+            return PrimaryCategories.BinarySearch(primaryCategory) >= 0;
         }
 
         /// <summary>
@@ -85,14 +94,14 @@ namespace BTQLib
                 AddPrimaryCategory(primaryCategory);
             }
 
-            int primaryIndex = _primaryCategories.BinarySearch(primaryCategory);
-            int secondaryIndex = _secondaryCategories[primaryIndex].BinarySearch(secondaryCategory);
+            int primaryIndex = PrimaryCategories.BinarySearch(primaryCategory);
+            int secondaryIndex = SecondaryCategories[primaryIndex].BinarySearch(secondaryCategory);
             if (secondaryIndex >= 0)
             {
                 return;
             }
 
-            _secondaryCategories[primaryIndex].Insert(~secondaryIndex, secondaryCategory);
+            SecondaryCategories[primaryIndex].Insert(~secondaryIndex, secondaryCategory);
         }
 
         /// <summary>
@@ -104,10 +113,10 @@ namespace BTQLib
         /// <returns>True if the secondary category exists in the primary category.</returns>
         public bool SecondaryCategoryExists(string primaryCategory, string secondaryCategory)
         {
-            int primaryIndex = _primaryCategories.BinarySearch(primaryCategory);
+            int primaryIndex = PrimaryCategories.BinarySearch(primaryCategory);
             if (primaryIndex >= 0)
             {
-                int secondaryIndex = _secondaryCategories[primaryIndex].BinarySearch(secondaryCategory);
+                int secondaryIndex = SecondaryCategories[primaryIndex].BinarySearch(secondaryCategory);
                 return secondaryIndex >= 0;
             }
 

@@ -41,6 +41,7 @@ public class ProfileController
         }
 
         DrawAccounts();
+        DrawBudget();
     }
 
     private void DrawSelectedAccountHeader()
@@ -115,6 +116,27 @@ public class ProfileController
                 _selectedProfile.Accounts.Add(new Account("New Account"));
             }
             EditorUtilities.EndHorizontalCentering();
+        }
+        EditorUtilities.EndVerticalCentering();
+    }
+
+    private void DrawBudget()
+    {
+        EditorUtilities.BeginVerticalCentering();
+        {
+            EditorUtilities.BeginHorizontalCentering();
+            EditorUtilities.ContentWidthLabel("Budget", EditorStyles.boldLabel);
+            EditorUtilities.EndHorizontalCentering();
+
+            if (!_selectedProfile.Budget.Created)
+            {
+                EditorUtilities.BeginHorizontalCentering();
+                if (EditorUtilities.ContentWidthButton("Create A Budget"))
+                {
+                    _selectedProfile.Budget.CreateMonthlyBudgets(_selectedProfile);
+                }
+                EditorUtilities.EndHorizontalCentering();
+            }
         }
         EditorUtilities.EndVerticalCentering();
     }

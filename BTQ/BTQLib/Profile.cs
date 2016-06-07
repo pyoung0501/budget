@@ -17,6 +17,21 @@ namespace BTQLib
         /// <summary>
         /// Accounts contained in the profile.
         /// </summary>
+        public IList<Account> Accounts { get { return _accounts; } }
+
+        /// <summary>
+        /// Object managing the transaction categories.
+        /// </summary>
+        public Categories Categories { get { return _categories; } }
+
+        /// <summary>
+        /// Object managing the budget for all accounts.
+        /// </summary>
+        public Budget Budget { get { return _budget; } }
+
+        /// <summary>
+        /// Accounts contained in the profile.
+        /// </summary>
         private List<Account> _accounts = new List<Account>();
 
         /// <summary>
@@ -25,15 +40,10 @@ namespace BTQLib
         private Categories _categories = new Categories();
 
         /// <summary>
-        /// Accounts contained in the profile.
+        /// Object managing the budget for all accounts.
         /// </summary>
-        public IList<Account> Accounts { get { return _accounts; } }
+        private Budget _budget = new Budget();
 
-        /// <summary>
-        /// Object managing the transaction categories.
-        /// </summary>
-        public Categories Categories { get { return _categories; } }
-        
 
         /// <summary>
         /// Constructs a new instance of Profile.
