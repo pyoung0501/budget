@@ -49,6 +49,11 @@ public class AccountController
     /// </summary>
     private List<Transaction> _sortedTransactions;
 
+    /// <summary>
+    /// Scroll position.
+    /// </summary>
+    private Vector2 _scrollPos;
+
     public AccountController(Profile profile, Account account)
     {
         _profile = profile;
@@ -109,18 +114,22 @@ public class AccountController
             {
                 DrawTransactionColumnHeaders();
 
-                decimal balance = 0;
-                foreach(Transaction transaction in _sortedTransactions)
+                _scrollPos = EditorGUILayout.BeginScrollView(_scrollPos);
                 {
-                    balance += transaction.Amount;
-                    
-                    DrawTransaction(transaction, balance);
-                }
+                    decimal balance = 0;
+                    foreach (Transaction transaction in _sortedTransactions)
+                    {
+                        balance += transaction.Amount;
 
-                if (EditorUtilities.ContentWidthButton("+ Transaction"))
-                {
-                    _transactionToAdd = new Transaction() { Date = DateTime.Now };
+                        DrawTransaction(transaction, balance);
+                    }
+
+                    if (EditorUtilities.ContentWidthButton("+ Transaction"))
+                    {
+                        _transactionToAdd = new Transaction() { Date = DateTime.Now };
+                    }
                 }
+                EditorGUILayout.EndScrollView();
             }
         }
         EditorGUILayout.EndVertical();
