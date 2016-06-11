@@ -174,7 +174,7 @@ public class BudgetController
                         else
                         {
                             MonthlyBudget monthlyBudget = _profile.Budget.MonthlyBudgets.Find(mb => mb.Year == _currYear && mb.Month == month);
-                            _monthlyBudgetController = new MonthlyBudgetController(monthlyBudget);
+                            _monthlyBudgetController = new MonthlyBudgetController(monthlyBudget, _profile);
                         }
                     }
 

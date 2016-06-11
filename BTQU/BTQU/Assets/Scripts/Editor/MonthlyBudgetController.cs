@@ -13,6 +13,11 @@ public class MonthlyBudgetController
     private MonthlyBudget _monthlyBudget;
 
     /// <summary>
+    /// Parent profile.
+    /// </summary>
+    private Profile _profile;
+
+    /// <summary>
     /// List of month names in chronological order.
     /// </summary>
     private static readonly string[] _monthNames = new string[]
@@ -35,9 +40,10 @@ public class MonthlyBudgetController
     /// Constructor.
     /// </summary>
     /// <param name="monthlyBudget">Monthly budget.</param>
-    public MonthlyBudgetController(MonthlyBudget monthlyBudget)
+    public MonthlyBudgetController(MonthlyBudget monthlyBudget, Profile profile)
     {
         _monthlyBudget = monthlyBudget;
+        _profile = profile;
     }
 
     /// <summary>
@@ -58,5 +64,26 @@ public class MonthlyBudgetController
             EditorGUILayout.EndHorizontal();
         }
         EditorUtilities.EndHorizontalCentering();
+
+        EditorGUILayout.BeginHorizontal();
+        {
+            DrawCategories();
+        }
+        EditorGUILayout.EndHorizontal();
+    }
+
+    /// <summary>
+    /// Draws the budget categories.
+    /// </summary>
+    private void DrawCategories()
+    {
+        EditorGUILayout.BeginVertical("box");
+        {
+            foreach(string category in _profile.Categories.PrimaryCategories)
+            {
+                EditorGUILayout.LabelField(category);
+            }
+        }
+        EditorGUILayout.EndVertical();
     }
 }
