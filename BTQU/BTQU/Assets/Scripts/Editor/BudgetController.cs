@@ -35,6 +35,11 @@ public class BudgetController
     private Vector3 _scrollPos;
 
     /// <summary>
+    /// Controller for the selected monthly budget.
+    /// </summary>
+    private MonthlyBudgetController _monthlyBudgetController;
+
+    /// <summary>
     /// List of month names in chronological order.
     /// </summary>
     private static readonly string[] _monthNames = new string[]
@@ -77,6 +82,28 @@ public class BudgetController
     {
         if(_currYear == 0)
         {
+            return;
+        }
+
+        // Draw Selected Monthly Budget
+        if(_monthlyBudgetController != null)
+        {
+            EditorGUILayout.BeginHorizontal("box");
+            {
+                if(EditorUtilities.ContentWidthButton("< Budget"))
+                {
+                    _monthlyBudgetController = null;
+                }
+
+                GUILayout.FlexibleSpace();
+            }
+            EditorGUILayout.EndHorizontal();
+
+            if (_monthlyBudgetController != null)
+            {
+                _monthlyBudgetController.DrawView();
+            }
+
             return;
         }
 
@@ -143,6 +170,11 @@ public class BudgetController
                         if (isNextBudget)
                         {
                             AddNextMonthlyBudget();
+                        }
+                        else
+                        {
+                            MonthlyBudget monthlyBudget = _profile.Budget.MonthlyBudgets.Find(mb => mb.Year == _currYear && mb.Month == month);
+                            _monthlyBudgetController = new MonthlyBudgetController(monthlyBudget);
                         }
                     }
 
