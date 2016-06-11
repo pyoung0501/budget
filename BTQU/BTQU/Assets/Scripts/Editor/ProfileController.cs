@@ -11,14 +11,14 @@ public class ProfileController
     private Account _selectedAccount;
     private AccountController _accountController;
 
+    /// <summary>
+    /// The budget controller.
+    /// </summary>
+    private BudgetController _budgetController;
+
     public ProfileController(Profile selectedProfile)
     {
         _selectedProfile = selectedProfile;
-
-        if(_selectedProfile.Accounts.Count == 1)
-        {
-            _selectedAccount = _selectedProfile.Accounts[0];
-        }
     }
 
     public void DrawView()
@@ -35,6 +35,19 @@ public class ProfileController
             if(_accountController != null)
             {
                 _accountController.DrawView();
+            }
+
+            return;
+        }
+
+        // Budget View
+        if(_budgetController != null)
+        {
+            DrawBudgetHeader();
+
+            if (_budgetController != null)
+            {
+                _budgetController.DrawView();
             }
 
             return;
@@ -141,14 +154,33 @@ public class ProfileController
                 }
                 EditorUtilities.EndHorizontalCentering();
             }
-
-            EditorUtilities.BeginHorizontalCentering();
-            if (EditorUtilities.ContentWidthButton("+ Month"))
+            else
             {
-                _selectedProfile.Budget.AddNextMonthlyBudget(_selectedProfile);
+                EditorUtilities.BeginHorizontalCentering();
+                if (EditorUtilities.ContentWidthButton("View"))
+                {
+                    _budgetController = new BudgetController(_selectedProfile);
+                }
+                EditorUtilities.EndHorizontalCentering();
             }
-            EditorUtilities.EndHorizontalCentering();
         }
         EditorUtilities.EndVerticalCentering();
+    }
+
+    /// <summary>
+    /// Draws the budget header.
+    /// </summary>
+    private void DrawBudgetHeader()
+    {
+        EditorGUILayout.BeginHorizontal("box");
+        {
+            if (EditorUtilities.ContentWidthButton("< Accounts"))
+            {
+                _budgetController = null;
+            }
+
+            GUILayout.FlexibleSpace();
+        }
+        EditorGUILayout.EndHorizontal();
     }
 }
