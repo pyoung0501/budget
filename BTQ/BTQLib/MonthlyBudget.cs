@@ -1,4 +1,6 @@
-﻿namespace BTQLib
+﻿using System.Collections.Generic;
+
+namespace BTQLib
 {
     /// <summary>
     /// Represents the budget for a single month.
@@ -16,6 +18,11 @@
         public int Year { get { return _year; } }
 
         /// <summary>
+        /// Categories mapped to percentages.
+        /// </summary>
+        public Dictionary<string, float> CategoryPercentages { get { return _categoryPercentages; } }
+
+        /// <summary>
         /// Budget month.
         /// </summary>
         private int _month;
@@ -26,6 +33,11 @@
         private int _year;
 
         /// <summary>
+        /// Categories mapped to percentages.
+        /// </summary>
+        private Dictionary<string, float> _categoryPercentages = new Dictionary<string, float>();
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="month">Budget month.</param>
@@ -34,6 +46,36 @@
         {
             _month = month;
             _year = year;
+        }
+
+        /// <summary>
+        /// Gets the percentage for the given (primary) category in the range 0-1.
+        /// </summary>
+        /// <param name="primaryCategory">Primary category.</param>
+        /// <returns>The percentage for the given primary category.</returns>
+        public float GetPercentage(string primaryCategory)
+        {
+            return _categoryPercentages.ContainsKey(primaryCategory)
+                 ? _categoryPercentages[primaryCategory]
+                 : 0;
+        }
+
+        /// <summary>
+        /// Sets the percentage for the specified primary category.
+        /// Percentage is expected to be in the range 0-1.
+        /// </summary>
+        /// <param name="primaryCategory">Primary category.</param>
+        /// <param name="percentage">Percentage to set to (0-1).</param>
+        public void SetPercentage(string primaryCategory, float percentage)
+        {
+            if(!_categoryPercentages.ContainsKey(primaryCategory))
+            {
+                _categoryPercentages.Add(primaryCategory, percentage);
+            }
+            else
+            {
+                _categoryPercentages[primaryCategory] = percentage;
+            }
         }
     }
 }

@@ -81,7 +81,21 @@ public class MonthlyBudgetController
         {
             foreach(string category in _profile.Categories.PrimaryCategories)
             {
-                EditorGUILayout.LabelField(category);
+                EditorGUILayout.BeginHorizontal();
+                {
+                    EditorGUILayout.LabelField(category, GUILayout.Width(100.0f));
+
+                    float percentage = _monthlyBudget.GetPercentage(category) * 100.0f;
+                    float newPercentage = EditorGUILayout.FloatField(percentage, GUILayout.Width(50.0f));
+
+                    if (Mathf.Abs(newPercentage - percentage) >= 0.01f)
+                    {
+                        _monthlyBudget.SetPercentage(category, newPercentage / 100.0f);
+                    }
+
+                    EditorUtilities.ContentWidthLabel("%");
+                }
+                EditorGUILayout.EndHorizontal();
             }
         }
         EditorGUILayout.EndVertical();
