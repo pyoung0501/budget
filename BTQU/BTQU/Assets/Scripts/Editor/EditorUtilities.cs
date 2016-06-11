@@ -6,6 +6,16 @@ using UnityEngine;
 
 internal class EditorUtilities
 {
+    /// <summary>
+    /// The stack tracking enabled states. 
+    /// </summary>
+    private static Stack<bool> _enabledStatck = new Stack<bool>();
+
+    /// <summary>
+    /// Whether or not the GUI is currently enabled.
+    /// </summary>
+    internal static bool Enabled { get { return _enabledStatck.Peek(); } }
+
     internal static void ContentWidthLabel(string text, GUIStyle style = null)
     {
         if(style == null)
@@ -18,55 +28,239 @@ internal class EditorUtilities
         EditorGUILayout.LabelField(labelContent, style, GUILayout.Width(labelSize.x));
     }
 
-    internal static bool ContentWidthButton(string text, GUIStyle style = null)
+    /// <summary>
+    /// Draws a content width button.
+    /// </summary>
+    /// <param name="text">Text.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool ContentWidthButton(string text)
     {
-        if (style == null)
-        {
-            style = GUI.skin.button;
-        }
+        return ContentWidthButton(text, Color.white, GUI.skin.button, true);
+    }
 
+    /// <summary>
+    /// Draws a content width button with the given text and color.
+    /// </summary>
+    /// <param name="text">Text.</param>
+    /// <param name="color">Color.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool ContentWidthButton(string text, Color color)
+    {
+        return ContentWidthButton(text, color, GUI.skin.button, true);
+    }
+
+    /// <summary>
+    /// Draws a content width button with the given text and style.
+    /// </summary>
+    /// <param name="text">Text.</param>
+    /// <param name="style">Style.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool ContentWidthButton(string text, GUIStyle style)
+    {
+        return ContentWidthButton(text, Color.white, style, true);
+    }
+
+    /// <summary>
+    /// Draws a content width button with the given text and enabled state.
+    /// </summary>
+    /// <param name="text">Text.</param>
+    /// <param name="enabled">Whether or not the button is enabled.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool ContentWidthButton(string text, bool enabled)
+    {
+        return ContentWidthButton(text, Color.white, GUI.skin.button, enabled);
+    }
+
+    /// <summary>
+    /// Draws a content width button with the given text, color and style.
+    /// </summary>
+    /// <param name="text">Text.</param>
+    /// <param name="color">Color.</param>
+    /// <param name="style">Style.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool ContentWidthButton(string text, Color color, GUIStyle style)
+    {
+        return ContentWidthButton(text, color, style, true);
+    }
+
+    /// <summary>
+    /// Draws a content width button with the given text, color and enabled state.
+    /// </summary>
+    /// <param name="text">Text.</param>
+    /// <param name="color">Color.</param>
+    /// <param name="enabled">Whether or not the button is enabled.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool ContentWidthButton(string text, Color color, bool enabled)
+    {
+        return ContentWidthButton(text, color, GUI.skin.button, enabled);
+    }
+
+    /// <summary>
+    /// Draws a content width button with the given text, style and enabled state.
+    /// </summary>
+    /// <param name="text">Text.</param>
+    /// <param name="style">Style.</param>
+    /// <param name="enabled">Whether or not the button is enabled.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool ContentWidthButton(string text, GUIStyle style, bool enabled)
+    {
+        return ContentWidthButton(text, Color.white, style, enabled);
+    }
+    
+    /// <summary>
+    /// Draws a content width button with the given text, color, style and enabled state.
+    /// </summary>
+    /// <param name="text">Text.</param>
+    /// <param name="color">Color.</param>
+    /// <param name="style">Style.</param>
+    /// <param name="enabled">Whether or not the button is enabled.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool ContentWidthButton(string text, Color color, GUIStyle style, bool enabled)
+    {
         GUIContent buttonContent = new GUIContent(text);
         Vector2 buttonSize = style.CalcSize(buttonContent);
-        return Button(buttonContent, style, GUILayout.Width(buttonSize.x));
+        return Button(buttonContent, color, style, enabled, GUILayout.Width(buttonSize.x));
     }
 
-    internal static bool ContentWidthButton(string text, Color color, GUIStyle style = null)
+    /// <summary>
+    /// Draws a button.
+    /// </summary>
+    /// <param name="text">Text.</param>
+    /// <param name="layoutOptions">Optional layout options.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool Button(string text, params GUILayoutOption[] layoutOptions)
     {
-        if (style == null)
-        {
-            style = GUI.skin.button;
-        }
-
-        GUIContent buttonContent = new GUIContent(text);
-        Vector2 buttonSize = style.CalcSize(buttonContent);
-        return Button(buttonContent, color, style, GUILayout.Width(buttonSize.x));
+        return Button(new GUIContent(text), Color.white, GUI.skin.button, true, layoutOptions);
     }
 
-    internal static bool Button(string buttonText, params GUILayoutOption[] guiLayoutOptions)
+    /// <summary>
+    /// Draws a button.
+    /// </summary>
+    /// <param name="text">Text.</param>
+    /// <param name="color">Color.</param>
+    /// <param name="layoutOptions">Optional layout options.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool Button(string text, Color color, params GUILayoutOption[] layoutOptions)
     {
-        return Button(new GUIContent(buttonText), Color.white, GUI.skin.button, guiLayoutOptions);
+        return Button(new GUIContent(text), color, GUI.skin.button, true, layoutOptions);
     }
 
-    internal static bool Button(string buttonText, Color color, params GUILayoutOption[] guiLayoutOptions)
+    /// <summary>
+    /// Draws a button.
+    /// </summary>
+    /// <param name="text">Text.</param>
+    /// <param name="style">Style.</param>
+    /// <param name="layoutOptions">Optional layout options.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool Button(string text, GUIStyle style, params GUILayoutOption[] layoutOptions)
     {
-        return Button(new GUIContent(buttonText), color, GUI.skin.button, guiLayoutOptions);
+        return Button(new GUIContent(text), Color.white, style, true, layoutOptions);
     }
 
-    internal static bool Button(string buttonText, GUIStyle style, params GUILayoutOption[] guiLayoutOptions)
+    /// <summary>
+    /// Draws a button.
+    /// </summary>
+    /// <param name="text">Text.</param>
+    /// <param name="enabled">Whether or not the button is enabled.</param>
+    /// <param name="layoutOptions">Optional layout options.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool Button(string text, bool enabled, params GUILayoutOption[] layoutOptions)
     {
-        return Button(new GUIContent(buttonText), Color.white, style, guiLayoutOptions);
+        return Button(new GUIContent(text), Color.white, GUI.skin.button, enabled, layoutOptions);
     }
 
-    internal static bool Button(GUIContent buttonContent, GUIStyle style, params GUILayoutOption[] guiLayoutOptions)
+    /// <summary>
+    /// Draws a button.
+    /// </summary>
+    /// <param name="text">Text.</param>
+    /// <param name="color">Color.</param>
+    /// <param name="style">Style.</param>
+    /// <param name="layoutOptions">Optional layout options.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool Button(string text, Color color, GUIStyle style, params GUILayoutOption[] layoutOptions)
     {
-        return Button(buttonContent, Color.white, style, guiLayoutOptions);
+        return Button(new GUIContent(text), color, style, true, layoutOptions);
     }
 
-    internal static bool Button(GUIContent buttonContent, Color color, GUIStyle style, params GUILayoutOption[] guiLayoutOptions)
+    /// <summary>
+    /// Draws a button.
+    /// </summary>
+    /// <param name="text">Text.</param>
+    /// <param name="color">Color.</param>
+    /// <param name="enabled">Whether or not the button is enabled.</param>
+    /// <param name="layoutOptions">Optional layout options.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool Button(string text, Color color, bool enabled, params GUILayoutOption[] layoutOptions)
     {
+        return Button(new GUIContent(text), color, GUI.skin.button, enabled, layoutOptions);
+    }
+
+    /// <summary>
+    /// Draws a button.
+    /// </summary>
+    /// <param name="text">Text.</param>
+    /// <param name="style">Style.</param>
+    /// <param name="enabled">Whether or not the button is enabled.</param>
+    /// <param name="layoutOptions">Optional layout options.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool Button(string text, GUIStyle style, bool enabled, params GUILayoutOption[] layoutOptions)
+    {
+        return Button(new GUIContent(text), Color.white, style, enabled, layoutOptions);
+    }
+
+    /// <summary>
+    /// Draws a button.
+    /// </summary>
+    /// <param name="content">Content.</param>
+    /// <param name="color">Color.</param>
+    /// <param name="layoutOptions">Optional layout options.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool Button(GUIContent content, Color color, params GUILayoutOption[] layoutOptions)
+    {
+        return Button(content, color, GUI.skin.button, true, layoutOptions);
+    }
+
+    /// <summary>
+    /// Draws a button.
+    /// </summary>
+    /// <param name="content">Content.</param>
+    /// <param name="style">Style.</param>
+    /// <param name="layoutOptions">Optional layout options.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool Button(GUIContent content, GUIStyle style, params GUILayoutOption[] layoutOptions)
+    {
+        return Button(content, Color.white, style, true, layoutOptions);
+    }
+
+    /// <summary>
+    /// Draws a button.
+    /// </summary>
+    /// <param name="content">Content.</param>
+    /// <param name="color">Color.</param>
+    /// <param name="style">Style.</param>
+    /// <param name="layoutOptions">Optional layout options.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool Button(GUIContent content, Color color, GUIStyle style, params GUILayoutOption[] layoutOptions)
+    {
+        return Button(content, color, style, true, layoutOptions);
+    }
+
+    /// <summary>
+    /// Draws a button.
+    /// </summary>
+    /// <param name="content">Content.</param>
+    /// <param name="color">Color.</param>
+    /// <param name="style">Style.</param>
+    /// <param name="enabled">Whether or not the button is enabled.</param>
+    /// <param name="layoutOptions">Optional layout options.</param>
+    /// <returns>True if pressed; otherwise, false.</returns>
+    internal static bool Button(GUIContent content, Color color, GUIStyle style, bool enabled, params GUILayoutOption[] layoutOptions)
+    {
+        BeginEnabled(enabled);
         BeginBackgroundColor(color);
-        bool pressed = GUILayout.Button(buttonContent, style, guiLayoutOptions);
+        bool pressed = GUILayout.Button(content, style, layoutOptions);
         EndBackgroundColor();
+        EndEnabled();
 
         return pressed;
     }
@@ -83,6 +277,24 @@ internal class EditorUtilities
     internal static void EndBackgroundColor()
     {
         GUI.backgroundColor = _backgroundColorStack.Pop();
+    }
+
+    /// <summary>
+    /// Begins an enabled state.
+    /// </summary>
+    /// <param name="enable">Whether or not to enable the GUI.</param>
+    internal static void BeginEnabled(bool enable)
+    {
+        _enabledStatck.Push(GUI.enabled);
+        GUI.enabled = enable;
+    }
+
+    /// <summary>
+    /// Ends the last enabled state.
+    /// </summary>
+    internal static void EndEnabled()
+    {
+        GUI.enabled = _enabledStatck.Pop();
     }
 
     internal static void BeginRightJustify()
