@@ -115,6 +115,22 @@ public class MonthlyBudgetController
                 EditorUtilities.EndBackgroundColor();
             }
             EditorGUILayout.EndHorizontal();
+
+            // Total percentage
+            EditorGUILayout.BeginHorizontal();
+            {
+                Color color = remainingPercentage > 0 ? Color.white : remainingPercentage == 0 ? Color.gray : Color.red;
+                EditorUtilities.BeginBackgroundColor(color);
+                EditorUtilities.BeginEnabled(false);
+                {
+                    EditorGUILayout.LabelField("(Total)", GUILayout.Width(100.0f));
+                    EditorGUILayout.FloatField(100.0f - remainingPercentage, GUILayout.Width(50.0f));
+                    EditorUtilities.ContentWidthLabel("%");
+                }
+                EditorUtilities.EndEnabled();
+                EditorUtilities.EndBackgroundColor();
+            }
+            EditorGUILayout.EndHorizontal();
         }
         EditorGUILayout.EndVertical();
     }
