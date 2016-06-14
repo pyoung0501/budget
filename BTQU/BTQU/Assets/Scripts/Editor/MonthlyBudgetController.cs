@@ -79,6 +79,7 @@ public class MonthlyBudgetController
     {
         EditorGUILayout.BeginVertical("box");
         {
+            float remainingPercentage = 100.0f;
             foreach(string category in _profile.Categories.PrimaryCategories)
             {
                 EditorGUILayout.BeginHorizontal();
@@ -87,16 +88,33 @@ public class MonthlyBudgetController
 
                     float percentage = _monthlyBudget.GetPercentage(category) * 100.0f;
                     float newPercentage = EditorGUILayout.FloatField(percentage, GUILayout.Width(50.0f));
+                    remainingPercentage -= newPercentage;
 
                     if (Mathf.Abs(newPercentage - percentage) >= 0.01f)
                     {
-                        _monthlyBudget.SetPercentage(category, newPercentage / 100.0f);
+                        _monthlyBudget.SetPercentage(category, Mathf.Floor(newPercentage * 100.0f) / 10000.0f);
                     }
 
                     EditorUtilities.ContentWidthLabel("%");
                 }
                 EditorGUILayout.EndHorizontal();
             }
+
+            // Unassigned percentage
+            EditorGUILayout.BeginHorizontal();
+            {
+                Color color = remainingPercentage > 0 ? Color.white : remainingPercentage == 0 ? Color.gray : Color.red;
+                EditorUtilities.BeginBackgroundColor(color);
+                EditorUtilities.BeginEnabled(false);
+                {
+                    EditorGUILayout.LabelField("(Unassigned)", GUILayout.Width(100.0f));
+                    EditorGUILayout.FloatField(remainingPercentage, GUILayout.Width(50.0f));
+                    EditorUtilities.ContentWidthLabel("%");
+                }
+                EditorUtilities.EndEnabled();
+                EditorUtilities.EndBackgroundColor();
+            }
+            EditorGUILayout.EndHorizontal();
         }
         EditorGUILayout.EndVertical();
     }
