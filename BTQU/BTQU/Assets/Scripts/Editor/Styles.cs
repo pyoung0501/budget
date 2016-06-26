@@ -24,6 +24,51 @@ namespace BTQ
             }
         }
 
+        public static GUIStyle RightAlignedLabel
+        {
+            get
+            {
+                if(_rightAlignedLabel == null)
+                {
+                    _rightAlignedLabel = new GUIStyle(GUI.skin.label);
+                    _rightAlignedLabel.alignment = TextAnchor.MiddleRight;
+                }
+
+                return _rightAlignedLabel;
+            }
+        }
+
+        public static GUIStyle RightAlignedBoldLabel
+        {
+            get
+            {
+                if(_rightAlignedBoldLabel == null)
+                {
+                    _rightAlignedBoldLabel = new GUIStyle(GUI.skin.label);
+                    _rightAlignedBoldLabel.alignment = TextAnchor.MiddleRight;
+                    _rightAlignedBoldLabel.fontStyle = FontStyle.Bold;
+                }
+
+                return _rightAlignedBoldLabel;
+            }
+        }
+
+        public static GUIStyle RightAlignedBoldWrappedLabel
+        {
+            get
+            {
+                if (_rightAlignedBoldWrappedLabel == null)
+                {
+                    _rightAlignedBoldWrappedLabel = new GUIStyle(GUI.skin.label);
+                    _rightAlignedBoldWrappedLabel.alignment = TextAnchor.MiddleRight;
+                    _rightAlignedBoldWrappedLabel.fontStyle = FontStyle.Bold;
+                    _rightAlignedBoldWrappedLabel.wordWrap = true;
+                }
+
+                return _rightAlignedBoldWrappedLabel;
+            }
+        }
+
         /// <summary>
         /// Style for drawing a center justified label.
         /// </summary>
@@ -43,5 +88,8 @@ namespace BTQ
 
         private static GUIStyle _rightAlignedTextField;
         private static GUIStyle _centerJustifiedLabel;
+        private static GUIStyle _rightAlignedBoldLabel;
+        private static GUIStyle _rightAlignedLabel;
+        private static GUIStyle _rightAlignedBoldWrappedLabel;
     }
 }
