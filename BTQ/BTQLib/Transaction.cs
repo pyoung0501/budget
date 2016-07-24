@@ -35,10 +35,33 @@ namespace BTQLib
         public DateTime Date { get; set; }
 
         /// <summary>
+        /// For income transactions this indicates how the transaction is
+        /// applied to the budget categories.
+        /// </summary>
+        public AppliedState AppliedState { get; set; }
+
+        /// <summary>
+        /// For income transactions applied to a specific category this
+        /// indicates the category the income transaction applies to.
+        /// </summary>
+        public string AppliedToCategory { get; set; }
+
+        /// <summary>
         /// Additional data for the transaction if it was imported.
         /// Manually input transactions should not have any import data.
         /// </summary>
         public ImportData ImportData { get; set; }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public Transaction()
+        {
+            Payee = "";
+            Description = "";
+            Category = "";
+            AppliedToCategory = "";
+        }
     }
 
     /// <summary>
@@ -74,5 +97,15 @@ namespace BTQLib
         /// of the transaction.  This may or may not be set.
         /// </summary>
         public int? CheckOrSlipNo { get; set; }
+    }
+
+    /// <summary>
+    /// The applied states of an income transaction.
+    /// </summary>
+    public enum AppliedState
+    {
+        NotApplied,
+        ApplyToWhole,
+        ApplyToCategory
     }
 }
