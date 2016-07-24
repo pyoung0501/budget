@@ -1,4 +1,5 @@
-﻿using BTQLib;
+﻿using BTQ;
+using BTQLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,12 @@ using UnityEngine;
 /// </summary>
 public class TransactionsView
 {
+    /// <summary>
+    /// Width of the balance column.
+    /// </summary>
+    private const float BalanceColumnWidth = 100.0f;
+
+
     /// <summary>
     /// List of transactions being managed by this view.
     /// </summary>
@@ -60,6 +67,11 @@ public class TransactionsView
         /// The columns to display for the list of transactions.
         /// </summary>
         public TransactionColumn[] Columns;
+
+        /// <summary>
+        /// Whether or not to show a running balance for each transaction.
+        /// </summary>
+        public bool ShowRunningBalance;
     }
 
 
@@ -115,7 +127,14 @@ public class TransactionsView
             {
                 balance += transaction.Amount;
 
-                DrawTransaction(transaction, balance);
+                if (_settings.ShowRunningBalance)
+                {
+                    DrawTransaction(transaction, balance);
+                }
+                else
+                {
+                    DrawTransaction(transaction, null);
+                }
             }
         }
         EditorGUILayout.EndScrollView();
@@ -326,6 +345,15 @@ public class TransactionsView
                 EditorUtilities.BeginEnabled(column.Editable);
                 column.Draw(transaction);
                 EditorUtilities.EndEnabled();
+            }
+
+            if (balance.HasValue)
+            {
+                GUI.enabled = false;
+                EditorGUILayout.TextField(balance.Value.ToString("C2"),
+                                          Styles.RightAlignedTextField,
+                                          GUILayout.Width(BalanceColumnWidth));
+                GUI.enabled = true;
             }
         }
         EditorGUILayout.EndHorizontal();
