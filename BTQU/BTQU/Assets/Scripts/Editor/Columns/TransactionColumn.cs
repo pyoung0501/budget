@@ -11,6 +11,11 @@ public abstract class TransactionColumn
     public float Width { get; set; }
 
     /// <summary>
+    /// Whether or not the column is editable.
+    /// </summary>
+    public bool Editable { get; set; }
+
+    /// <summary>
     /// The display name of the column.
     /// </summary>
     public abstract string DisplayName { get; }
@@ -20,4 +25,12 @@ public abstract class TransactionColumn
     /// </summary>
     /// <param name="transaction">Transaction to draw.</param>
     public abstract void Draw(Transaction transaction);
+
+    /// <summary>
+    /// Constructor.
+    /// </summary>
+    public TransactionColumn()
+    {
+        Editable = true;
+    }
 }

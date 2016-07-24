@@ -547,15 +547,4 @@ public class AccountController
     private Func<Transaction, string>   Description =   (item) => { return item.Description; };
     private Func<Transaction, string>   Category =      (item) => { return item.Category; };
     private Func<Transaction, decimal>  Amount =        (item) => { return item.Amount; };
-    
-
-    /// <summary>
-    /// Column designations for sorting.
-    /// </summary>
-    public enum ColumnDesignation
-    {
-        Other,
-        Primary,
-        Secondary
-    }
 }
