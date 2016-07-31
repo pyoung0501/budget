@@ -87,6 +87,11 @@ public class MonthlyBudgetController
     private Dictionary<string, decimal> _incomePerCategory;
 
     /// <summary>
+    /// Mapping of previous balances for each category.
+    /// </summary>
+    Dictionary<string, decimal> _previousBalancePerCategory;
+
+    /// <summary>
     /// View for expense transactions.
     /// </summary>
     private TransactionsView _expensesView;
@@ -171,32 +176,25 @@ public class MonthlyBudgetController
     /// </summary>
     private void Refresh()
     {
-        _incomeTransactions = GetIncomeTransactions(_monthlyBudget.Month, _monthlyBudget.Year);
-        _expenseTransactions = GetExpenseTransactions(_monthlyBudget.Month, _monthlyBudget.Year);
-        _uncategorizedExpenses = _expenseTransactions.Where(t => !Transactions.IsCategorized(t, _profile.Categories))
-                                                     .ToArray();
-        _uncategorizedIncome = _incomeTransactions.Where(t => !Transactions.IsCategorized(t, _profile.Categories)
-                                                        || t.AppliedState == AppliedState.NotApplied
-                                                        || (t.AppliedState == AppliedState.ApplyToCategory && !_profile.Categories.PrimaryCategoryExists(t.AppliedToCategory)))
-                                                  .ToArray();
+        _incomeTransactions = GetIncomeTransactions(_monthlyBudget);
+        _expenseTransactions = GetExpenseTransactions(_monthlyBudget);
+        _uncategorizedExpenses = GetUncategorizedExpenses(_monthlyBudget);
+        _uncategorizedIncome = GetUncategorizedIncome(_monthlyBudget);
 
-        _totalIncomeAppliedToWhole = _incomeTransactions.Where(t => t.AppliedState == AppliedState.ApplyToWhole)
-                                                      .Sum(t => t.Amount);
+        _totalIncomeAppliedToWhole = GetIncomeAppliedToWhole(_monthlyBudget);
 
-        _expensesPerCategory = new Dictionary<string, decimal>();
-        _incomePerCategory = new Dictionary<string, decimal>();
-        foreach (string category in _profile.Categories.PrimaryCategories)
-        {
-            _expensesPerCategory.Add(category, GetExpenses(category));
-            _incomePerCategory.Add(category, GetIncome(category));
-        }
-        
-        _totalUncategorizedExpenses = _uncategorizedExpenses.Sum(t => t.Amount);
-        _totalUncategorizedIncome = _uncategorizedIncome.Sum(t => t.Amount);
+        _previousBalancePerCategory = GetPreviousBalancePerCategory(_monthlyBudget);
+        _expensesPerCategory = GetExpensesPerCategory(_monthlyBudget);
+        _incomePerCategory = GetIncomePerCategory(_monthlyBudget);
+
+        _totalUncategorizedExpenses = GetTotalUncategorizedExpenses(_monthlyBudget);
+        _totalUncategorizedIncome = GetTotalUncategorizedIncome(_monthlyBudget);
 
         _expensesView.Refresh(_showAllTransactions ? _expenseTransactions.ToList() : _uncategorizedExpenses.ToList());
         _incomeView.Refresh(_showAllTransactions ? _incomeTransactions.ToList() : _uncategorizedIncome.ToList());
     }
+
+    #region GUI
 
     /// <summary>
     /// Draws the monthly budget.
@@ -257,29 +255,13 @@ public class MonthlyBudgetController
                     if (Mathf.Abs(newPercentage - percentage) >= 0.01f)
                     {
                         _monthlyBudget.SetPercentage(category, Mathf.Floor(newPercentage * 100.0f) / 10000.0f);
-                        _incomePerCategory[category] = GetIncome(category);
+                        _incomePerCategory[category] = GetIncome(_monthlyBudget, category);
                     }
 
                     EditorUtilities.ContentWidthLabel("%");
                 }
                 EditorGUILayout.EndHorizontal();
             }
-
-            // Unassigned percentage
-            EditorGUILayout.BeginHorizontal();
-            {
-                Color color = remainingPercentage > 0 ? Color.white : remainingPercentage == 0 ? Color.gray : Color.red;
-                EditorUtilities.BeginBackgroundColor(color);
-                EditorUtilities.BeginEnabled(false);
-                {
-                    EditorGUILayout.LabelField("(Unassigned)", GUILayout.Width(100.0f));
-                    EditorGUILayout.FloatField(remainingPercentage, GUILayout.Width(50.0f));
-                    EditorUtilities.ContentWidthLabel("%");
-                }
-                EditorUtilities.EndEnabled();
-                EditorUtilities.EndBackgroundColor();
-            }
-            EditorGUILayout.EndHorizontal();
 
             // Total percentage
             EditorGUILayout.BeginHorizontal();
@@ -290,6 +272,22 @@ public class MonthlyBudgetController
                 {
                     EditorGUILayout.LabelField("(Total)", GUILayout.Width(100.0f));
                     EditorGUILayout.FloatField(100.0f - remainingPercentage, GUILayout.Width(50.0f));
+                    EditorUtilities.ContentWidthLabel("%");
+                }
+                EditorUtilities.EndEnabled();
+                EditorUtilities.EndBackgroundColor();
+            }
+            EditorGUILayout.EndHorizontal();
+
+            // Unassigned percentage
+            EditorGUILayout.BeginHorizontal();
+            {
+                Color color = remainingPercentage > 0 ? Color.white : remainingPercentage == 0 ? Color.gray : Color.red;
+                EditorUtilities.BeginBackgroundColor(color);
+                EditorUtilities.BeginEnabled(false);
+                {
+                    EditorGUILayout.LabelField("(Unassigned)", GUILayout.Width(100.0f));
+                    EditorGUILayout.FloatField(remainingPercentage, GUILayout.Width(50.0f));
                     EditorUtilities.ContentWidthLabel("%");
                 }
                 EditorUtilities.EndEnabled();
@@ -317,7 +315,7 @@ public class MonthlyBudgetController
                 {
                     EditorGUILayout.LabelField(category, GUILayout.Width(100.0f));
 
-                    decimal previousBalance = 0;//GetPrevousBalance(category);
+                    decimal previousBalance = _previousBalancePerCategory[category];
                     decimal expenses = _expensesPerCategory[category];
                     decimal income = _incomePerCategory[category];
                     decimal currentBalance = previousBalance + expenses + income;
@@ -329,23 +327,27 @@ public class MonthlyBudgetController
                 }
                 EditorGUILayout.EndHorizontal();
             }
-            /*
-            // Unassigned percentage
+
+            // Unassigned amount
+            EditorUtilities.BeginEnabled(false);
             EditorGUILayout.BeginHorizontal();
             {
-                Color color = remainingPercentage > 0 ? Color.white : remainingPercentage == 0 ? Color.gray : Color.red;
-                EditorUtilities.BeginBackgroundColor(color);
-                EditorUtilities.BeginEnabled(false);
-                {
-                    EditorGUILayout.LabelField("(Unassigned)", GUILayout.Width(100.0f));
-                    EditorGUILayout.FloatField(remainingPercentage, GUILayout.Width(50.0f));
-                    EditorUtilities.ContentWidthLabel("%");
-                }
-                EditorUtilities.EndEnabled();
-                EditorUtilities.EndBackgroundColor();
+                EditorGUILayout.LabelField("Unassigned", GUILayout.Width(100.0f));
+
+                decimal previousBalance = 0;
+                decimal expenses = _totalUncategorizedExpenses;
+                decimal income = _totalUncategorizedIncome;
+                decimal currentBalance = previousBalance + expenses + income;
+
+                EditorGUILayout.LabelField(previousBalance.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
+                EditorGUILayout.LabelField(expenses.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
+                EditorGUILayout.LabelField(income.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
+                EditorGUILayout.LabelField(currentBalance.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
             }
             EditorGUILayout.EndHorizontal();
+            EditorUtilities.EndEnabled();
 
+            /*
             // Total percentage
             EditorGUILayout.BeginHorizontal();
             {
@@ -490,34 +492,109 @@ public class MonthlyBudgetController
         EditorGUILayout.EndHorizontal();
     }
 
+    #endregion GUI
+
     /// <summary>
-    /// Gets the total monthly expenses for the given category.
+    /// Gets the income transactions for the given monthly budget.
     /// </summary>
-    /// <param name="category">Category.</param>
-    /// <returns>The total monthly expenses for the given category.</returns>
-    private decimal GetExpenses(string category)
+    /// <param name="monthlyBudget">Month budget.</param>
+    /// <returns>The income transactions for the given monthly budget.</returns>
+    private Transaction[] GetIncomeTransactions(MonthlyBudget monthlyBudget)
     {
-        Transaction[] transactions = GetTransactions(category, _monthlyBudget.Month, _monthlyBudget.Year);
-        transactions = transactions.Where(t => t.Amount < 0).ToArray();
-        return transactions.Sum(t => t.Amount);
+        return GetIncomeTransactions(monthlyBudget.Month, monthlyBudget.Year);
     }
 
     /// <summary>
-    /// Gets the total monthly income for the given category.
+    /// Gets the income transactions for the given month and year.
     /// </summary>
-    /// <param name="category">Category.</param>
-    /// <returns>The total monthly income for the given category.</returns>
-    private decimal GetIncome(string category)
+    /// <param name="month">Month.</param>
+    /// <param name="year">Year.</param>
+    /// <returns>The income transactions for the given month and year.</returns>
+    private Transaction[] GetIncomeTransactions(int month, int year)
     {
-        // TODO: change percentages to be stored as decimal
-        float percentage = _monthlyBudget.GetPercentage(category);
-        decimal incomeFromWhole = _totalIncomeAppliedToWhole * (decimal)percentage;
-        
-        decimal incomeFromSpecific = _incomeTransactions.Where(t => t.AppliedState == AppliedState.ApplyToCategory)
-                                                        .Where(t => t.AppliedToCategory == category)
-                                                        .Sum(t => t.Amount);
+        return _profile.Accounts.SelectMany(a => a.Transactions)
+                                .Where(t => t.Date.Year == year && t.Date.Month == month)
+                                .Where(t => t.Amount > 0)
+                                .ToArray();
+    }
 
-        return incomeFromWhole + incomeFromSpecific;
+    /// <summary>
+    /// Gets the expense transactions for the given monthly budget.
+    /// </summary>
+    /// <param name="monthlyBudget">Monthly budget.</param>
+    /// <returns>The expense transactions for the given monthly budget.</returns>
+    private Transaction[] GetExpenseTransactions(MonthlyBudget monthlyBudget)
+    {
+        return GetExpenseTransactions(monthlyBudget.Month, monthlyBudget.Year);
+    }
+
+    /// <summary>
+    /// Gets the expense transactions for the given month and year.
+    /// </summary>
+    /// <param name="month">Month.</param>
+    /// <param name="year">Year.</param>
+    /// <returns>The expense transactions for the given month and year.</returns>
+    private Transaction[] GetExpenseTransactions(int month, int year)
+    {
+        return _profile.Accounts.SelectMany(a => a.Transactions)
+                                .Where(t => t.Date.Year == year && t.Date.Month == month)
+                                .Where(t => t.Amount < 0)
+                                .ToArray();
+    }
+
+    /// <summary>
+    /// Gets the uncategorized expenses for the given monthly budget.
+    /// </summary>
+    /// <param name="monthlyBudget">Monthly budget.</param>
+    /// <returns>The uncategorized expenses for the given monthly budget.</returns>
+    private Transaction[] GetUncategorizedExpenses(MonthlyBudget monthlyBudget)
+    {
+        Transaction[] expenseTransactions = GetExpenseTransactions(monthlyBudget);
+        return expenseTransactions.Where(t => !Transactions.IsCategorized(t, _profile.Categories))
+                                  .ToArray();
+    }
+
+    /// <summary>
+    /// Gets the uncategorized income transactions for the given monthly budget.
+    /// </summary>
+    /// <param name="monthlyBudget">Monthly budget.</param>
+    /// <returns>The uncategorized income transactions for the given monthly budget.</returns>
+    private Transaction[] GetUncategorizedIncome(MonthlyBudget monthlyBudget)
+    {
+        Transaction[] incomeTransactions = GetIncomeTransactions(monthlyBudget);
+        return incomeTransactions.Where(t => !Transactions.IsCategorized(t, _profile.Categories)
+                                             || t.AppliedState == AppliedState.NotApplied
+                                             || (t.AppliedState == AppliedState.ApplyToCategory && !_profile.Categories.PrimaryCategoryExists(t.AppliedToCategory)))
+                                 .ToArray();
+    }
+
+    /// <summary>
+    /// Gets the expenses per category for the given monthly budget.
+    /// </summary>
+    /// <param name="monthlyBudget">Monthly budget.</param>
+    /// <returns>The expenses per category for the given monthly budget.</returns>
+    private Dictionary<string, decimal> GetExpensesPerCategory(MonthlyBudget monthlyBudget)
+    {
+        Dictionary<string, decimal> expensesPerCategory = new Dictionary<string, decimal>();
+        foreach (string category in _profile.Categories.PrimaryCategories)
+        {
+            expensesPerCategory.Add(category, GetExpenses(monthlyBudget, category));
+        }
+
+        return expensesPerCategory;
+    }
+
+    /// <summary>
+    /// Gets the total monthly expenses for the category in the given monthly budget.
+    /// </summary>
+    /// <param name="monthlyBudget">Monthly budget.</param>
+    /// <param name="category">Category.</param>
+    /// <returns>The total monthly expenses for the category in the given monthly budget.</returns>
+    private decimal GetExpenses(MonthlyBudget monthlyBudget, string category)
+    {
+        Transaction[] transactions = GetTransactions(category, monthlyBudget.Month, monthlyBudget.Year);
+        transactions = transactions.Where(t => t.Amount < 0).ToArray();
+        return transactions.Sum(t => t.Amount);
     }
 
     /// <summary>
@@ -536,30 +613,130 @@ public class MonthlyBudgetController
     }
 
     /// <summary>
-    /// Gets the income transactions for the given month and year.
+    /// Gets the income per category for the given monthly budget.
     /// </summary>
-    /// <param name="month">Month.</param>
-    /// <param name="year">Year.</param>
-    /// <returns>The income transactions for the given month and year.</returns>
-    private Transaction[] GetIncomeTransactions(int month, int year)
+    /// <param name="monthlyBudget">Monthly budget.</param>
+    /// <returns>The income per category for the given monthly budget.</returns>
+    private Dictionary<string, decimal> GetIncomePerCategory(MonthlyBudget monthlyBudget)
     {
-        return _profile.Accounts.SelectMany(a => a.Transactions)
-                                .Where(t => t.Date.Year == year && t.Date.Month == month)
-                                .Where(t => t.Amount > 0)
-                                .ToArray();
+        Dictionary<string, decimal> incomePerCategory = new Dictionary<string, decimal>();
+        foreach (string category in _profile.Categories.PrimaryCategories)
+        {
+            incomePerCategory.Add(category, GetIncome(monthlyBudget, category));
+        }
+
+        return incomePerCategory;
     }
 
     /// <summary>
-    /// Gets the expense transactions for the given month and year.
+    /// Gets the total monthly income for the given category.
     /// </summary>
-    /// <param name="month">Month.</param>
-    /// <param name="year">Year.</param>
-    /// <returns>The expense transactions for the given month and year.</returns>
-    private Transaction[] GetExpenseTransactions(int month, int year)
+    /// <param name="monthlyBudget">Monthly budget.</param>
+    /// <param name="category">Category.</param>
+    /// <returns>The total monthly income for the given category.</returns>
+    private decimal GetIncome(MonthlyBudget monthlyBudget, string category)
     {
-        return _profile.Accounts.SelectMany(a => a.Transactions)
-                                .Where(t => t.Date.Year == year && t.Date.Month == month)
-                                .Where(t => t.Amount < 0)
-                                .ToArray();
+        // TODO: change percentages to be stored as decimal
+        float percentage = monthlyBudget.GetPercentage(category);
+        decimal incomeFromWhole = GetIncomeAppliedToWhole(monthlyBudget) * (decimal)percentage;
+
+        Transaction[] incomeTransactions = GetIncomeTransactions(monthlyBudget);
+        decimal incomeFromSpecific = incomeTransactions.Where(t => t.AppliedState == AppliedState.ApplyToCategory)
+                                                       .Where(t => t.AppliedToCategory == category)
+                                                       .Sum(t => t.Amount);
+
+        return incomeFromWhole + incomeFromSpecific;
+    }
+
+    /// <summary>
+    /// Gets the amount in income applied to all categories in the given monthly budget.
+    /// </summary>
+    /// <param name="monthlyBudget">Monthly budget.</param>
+    /// <returns>The amount in income applied to all categories in the given monthly budget.</returns>
+    private decimal GetIncomeAppliedToWhole(MonthlyBudget monthlyBudget)
+    {
+        Transaction[] incomeTransactions = GetIncomeTransactions(monthlyBudget);
+        return incomeTransactions.Where(t => t.AppliedState == AppliedState.ApplyToWhole)
+                                 .Sum(t => t.Amount);
+    }
+
+    /// <summary>
+    /// Gets the total uncategorized expenses for the given monthly budget.
+    /// </summary>
+    /// <param name="monthlyBudget">Monthly budget.</param>
+    /// <returns>The total uncategorized expenses for the given monthly budget.</returns>
+    private decimal GetTotalUncategorizedExpenses(MonthlyBudget monthlyBudget)
+    {
+        Transaction[] uncategorizedExpenses = GetUncategorizedExpenses(monthlyBudget);
+        return uncategorizedExpenses.Sum(t => t.Amount);
+    }
+
+    /// <summary>
+    /// Gets the total uncategorized income in the given monthly budget.
+    /// </summary>
+    /// <param name="monthlyBudget">Monthly budget.</param>
+    /// <returns>The total uncategorized income in the given monthly budget.</returns>
+    private decimal GetTotalUncategorizedIncome(MonthlyBudget monthlyBudget)
+    {
+        Transaction[] uncategorizedIncome = GetUncategorizedIncome(monthlyBudget);
+        return uncategorizedIncome.Sum(t => t.Amount);
+    }
+    
+    /// <summary>
+    /// Gets the previous balances per category for the given monthly budget.
+    /// </summary>
+    /// <param name="monthlyBudget">Monthly budget.</param>
+    /// <returns>The previous balances per category for the given monthly budget.</returns>
+    private Dictionary<string, decimal> GetPreviousBalancePerCategory(MonthlyBudget monthlyBudget)
+    {
+        Dictionary<string, decimal> previousBalancePerCategory = new Dictionary<string, decimal>();
+        foreach (string category in _profile.Categories.PrimaryCategories)
+        {
+            MonthlyBudget prevMonthlyBudget = GetPreviousMonthlyBudget(monthlyBudget);
+            if (prevMonthlyBudget != null)
+            {
+                previousBalancePerCategory.Add(category, GetBalance(prevMonthlyBudget, category));
+            }
+            else
+            {
+                previousBalancePerCategory.Add(category, 0);
+            }
+        }
+
+        return previousBalancePerCategory;
+    }
+
+    /// <summary>
+    /// Gets the monthly budget previous to the given one or null if there is
+    /// not a previous one.
+    /// </summary>
+    /// <param name="monthlyBudget">Monthly budget.</param>
+    /// <returns>The monthly budget previous to the given one.</returns>
+    private MonthlyBudget GetPreviousMonthlyBudget(MonthlyBudget monthlyBudget)
+    {
+        int prevIndex = _profile.Budget.MonthlyBudgets.IndexOf(monthlyBudget) - 1;
+        return prevIndex >= 0 ? _profile.Budget.MonthlyBudgets[prevIndex] : null;
+    }
+
+    /// <summary>
+    /// Gets the balance for the category in the given monthly budget.
+    /// </summary>
+    /// <param name="monthlyBudget">Monthly budget.</param>
+    /// <param name="category">Category.</param>
+    /// <returns>The balance for the category in the given monthly budget.</returns>
+    public decimal GetBalance(MonthlyBudget monthlyBudget, string category)
+    {
+        decimal previousBalance;
+        {
+            MonthlyBudget prevMonthlyBudget = GetPreviousMonthlyBudget(monthlyBudget);
+            previousBalance = prevMonthlyBudget != null
+                            ? GetBalance(prevMonthlyBudget, category)
+                            : 0;
+        }
+                
+        decimal totalExpenses = GetExpenses(monthlyBudget, category);
+        decimal totalIncome = GetIncome(monthlyBudget, category);
+
+        return previousBalance + totalExpenses + totalIncome;
     }
 }
