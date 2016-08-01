@@ -67,6 +67,12 @@ public class MonthlyBudgetController
     private decimal _totalIncomeAppliedToWhole;
 
     /// <summary>
+    /// The balance of uncategorized transactions prior to the
+    /// current monthly budget.
+    /// </summary>
+    private decimal _previousUncategorizedBalance;
+
+    /// <summary>
     /// The total amount of uncategorized expenses.
     /// </summary>
     private decimal _totalUncategorizedExpenses;
@@ -187,6 +193,7 @@ public class MonthlyBudgetController
         _expensesPerCategory = GetExpensesPerCategory(_monthlyBudget);
         _incomePerCategory = GetIncomePerCategory(_monthlyBudget);
 
+        _previousUncategorizedBalance = GetPreviousUncategorizedBalance(_monthlyBudget);
         _totalUncategorizedExpenses = GetTotalUncategorizedExpenses(_monthlyBudget);
         _totalUncategorizedIncome = GetTotalUncategorizedIncome(_monthlyBudget);
 
@@ -334,7 +341,7 @@ public class MonthlyBudgetController
             {
                 EditorGUILayout.LabelField("Unassigned", GUILayout.Width(100.0f));
 
-                decimal previousBalance = 0;
+                decimal previousBalance = _previousUncategorizedBalance;
                 decimal expenses = _totalUncategorizedExpenses;
                 decimal income = _totalUncategorizedIncome;
                 decimal currentBalance = previousBalance + expenses + income;
@@ -738,5 +745,43 @@ public class MonthlyBudgetController
         decimal totalIncome = GetIncome(monthlyBudget, category);
 
         return previousBalance + totalExpenses + totalIncome;
+    }
+
+    /// <summary>
+    /// Gets the balance of the uncategorized transactions for the monthly budget
+    /// previous to the given one.
+    /// </summary>
+    /// <param name="monthlyBudget">Monthly budget.</param>
+    /// <returns>The balance of the uncategorized transactions for the previous monthly budget.</returns>
+    private decimal GetPreviousUncategorizedBalance(MonthlyBudget monthlyBudget)
+    {
+        MonthlyBudget prevMonthlyBudget = GetPreviousMonthlyBudget(monthlyBudget);
+        if (prevMonthlyBudget != null)
+        {
+            return GetUncategorizedBalance(prevMonthlyBudget);
+        }
+
+        return 0;
+    }
+
+    /// <summary>
+    /// Gets the balance of the uncategorized transactions for the given monthly budget.
+    /// </summary>
+    /// <param name="monthlyBudget">Monthly budget.</param>
+    /// <returns>The balance of the uncategorized transactions for the given monthly budget.</returns>
+    private decimal GetUncategorizedBalance(MonthlyBudget monthlyBudget)
+    {
+        decimal previousUncategorizedBalance;
+        {
+            MonthlyBudget prevMonthlyBudget = GetPreviousMonthlyBudget(monthlyBudget);
+            previousUncategorizedBalance = prevMonthlyBudget != null
+                                         ? GetUncategorizedBalance(prevMonthlyBudget)
+                                         : 0;
+        }
+
+        decimal totalUncategorizedExpenses = GetTotalUncategorizedExpenses(monthlyBudget);
+        decimal totalUncategorizedIncome = GetTotalUncategorizedIncome(monthlyBudget);
+
+        return previousUncategorizedBalance + totalUncategorizedExpenses + totalUncategorizedIncome;
     }
 }
