@@ -304,6 +304,11 @@ public class MonthlyBudgetController
         }
         EditorGUILayout.EndVertical();
 
+        decimal totalPrevious = 0;
+        decimal totalExpenses = 0;
+        decimal totalIncome = 0;
+        decimal totalBalance = 0;
+
         EditorGUILayout.BeginVertical("box");
         {
             EditorGUILayout.BeginHorizontal();
@@ -327,6 +332,11 @@ public class MonthlyBudgetController
                     decimal income = _incomePerCategory[category];
                     decimal currentBalance = previousBalance + expenses + income;
 
+                    totalPrevious += previousBalance;
+                    totalExpenses += expenses;
+                    totalIncome += income;
+                    totalBalance += currentBalance;
+
                     EditorGUILayout.LabelField(previousBalance.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
                     EditorGUILayout.LabelField(expenses.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
                     EditorGUILayout.LabelField(income.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
@@ -346,6 +356,11 @@ public class MonthlyBudgetController
                 decimal income = _totalUncategorizedIncome;
                 decimal currentBalance = previousBalance + expenses + income;
 
+                totalPrevious += previousBalance;
+                totalExpenses += expenses;
+                totalIncome += income;
+                totalBalance += currentBalance;
+
                 EditorGUILayout.LabelField(previousBalance.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
                 EditorGUILayout.LabelField(expenses.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
                 EditorGUILayout.LabelField(income.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
@@ -354,23 +369,19 @@ public class MonthlyBudgetController
             EditorGUILayout.EndHorizontal();
             EditorUtilities.EndEnabled();
 
-            /*
             // Total percentage
+            EditorUtilities.BeginEnabled(false);
             EditorGUILayout.BeginHorizontal();
             {
-                Color color = remainingPercentage > 0 ? Color.white : remainingPercentage == 0 ? Color.gray : Color.red;
-                EditorUtilities.BeginBackgroundColor(color);
-                EditorUtilities.BeginEnabled(false);
-                {
-                    EditorGUILayout.LabelField("(Total)", GUILayout.Width(100.0f));
-                    EditorGUILayout.FloatField(100.0f - remainingPercentage, GUILayout.Width(50.0f));
-                    EditorUtilities.ContentWidthLabel("%");
-                }
-                EditorUtilities.EndEnabled();
-                EditorUtilities.EndBackgroundColor();
+                EditorGUILayout.LabelField("Total", GUILayout.Width(100.0f));
+
+                EditorGUILayout.LabelField(totalPrevious.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
+                EditorGUILayout.LabelField(totalExpenses.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
+                EditorGUILayout.LabelField(totalIncome.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
+                EditorGUILayout.LabelField(totalBalance.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
             }
             EditorGUILayout.EndHorizontal();
-            */
+            EditorUtilities.EndEnabled();
         }
         EditorGUILayout.EndVertical();
         
