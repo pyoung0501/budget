@@ -57,6 +57,14 @@ public class TransactionsView
     /// </summary>
     private Settings _settings;
 
+    /// <summary>
+    /// Whether or not the view has any transactions in it.
+    /// </summary>
+    public bool HasTransactions
+    {
+        get { return _sourceTransactions != null && _sourceTransactions.Count > 0; }
+    }
+
 
     /// <summary>
     /// The settings for the transactions view.

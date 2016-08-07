@@ -3,6 +3,7 @@ using BTQLib;
 using BTQLib.Util;
 using UnityEditor;
 using UnityEngine;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -106,6 +107,11 @@ public class MonthlyBudgetController
     /// View for income transactions.
     /// </summary>
     private TransactionsView _incomeView;
+
+    /// <summary>
+    /// View for category transactions.
+    /// </summary>
+    private TransactionsView _categoryView;
     
     /// <summary>
     /// Whether or not to show all the transactions, or only the 
@@ -117,6 +123,33 @@ public class MonthlyBudgetController
     /// The active tab to display.
     /// </summary>
     private Tab _activeTab = Tab.Expenses;
+
+    /// <summary>
+    /// The selected main tab.
+    /// </summary>
+    private MainTab _selectedTab;
+
+    /// <summary>
+    /// The list of main tabs (Overview and one for each category).
+    /// </summary>
+    private List<MainTab> _mainTabs;
+
+
+    /// <summary>
+    /// Defines a main tab in the monthly budget.
+    /// </summary>
+    public class MainTab
+    {
+        /// <summary>
+        /// Name of the tab.
+        /// </summary>
+        public string Name;
+
+        /// <summary>
+        /// The action to draw the tab contents.
+        /// </summary>
+        public Action<string> Draw;
+    }
 
 
     /// <summary>
@@ -146,6 +179,23 @@ public class MonthlyBudgetController
     /// </summary>
     private void Initialize()
     {
+        // Tabs
+        {
+            // Create and Select the Overview tab
+            _mainTabs = new List<MainTab>();
+            {
+                _mainTabs.Add(new MainTab() { Name = "Overview", Draw = DrawOverview });
+            }
+
+            _selectedTab = _mainTabs[0];
+
+            // Create tabs for each of the categories
+            foreach (string category in _profile.Categories.PrimaryCategories)
+            {
+                _mainTabs.Add(new MainTab() { Name = category, Draw = DrawCategory });
+            }
+        }
+
         _expensesView = new TransactionsView(
             new TransactionsView.Settings()
             {
@@ -171,6 +221,18 @@ public class MonthlyBudgetController
                     new AmountColumn() { Width = 100.0f, Editable = false },
                     new AppliedToColumn() { Width = 120.0f, Editable = true },
                     new CategoryAppliedToColumn(_profile.Categories) { Width = 200.0f, Editable = true }
+                }
+            });
+
+        _categoryView = new TransactionsView(
+            new TransactionsView.Settings()
+            {
+                Columns = new TransactionColumn[]
+                {
+                    new DateColumn() { Width = 80.0f, Editable = false },
+                    new PayeeColumn() { Width = 300.0f, Editable = false },
+                    new DescriptionColumn() { Width = 300.0f, Editable = false },
+                    new AmountColumn() { Width = 100.0f, Editable = false }
                 }
             });
 
@@ -209,8 +271,7 @@ public class MonthlyBudgetController
     public void DrawView()
     {
         DrawMonthTitle();
-        DrawCategories();
-        DrawTabs();
+        DrawMainTabs();
     }
 
     /// <summary>
@@ -231,6 +292,46 @@ public class MonthlyBudgetController
             EditorGUILayout.EndHorizontal();
         }
         EditorUtilities.EndHorizontalCentering();
+    }
+
+    /// <summary>
+    /// Draws the main tabs.
+    /// </summary>
+    private void DrawMainTabs()
+    {
+        // Tabs Heading
+        EditorGUILayout.BeginHorizontal();
+        foreach (MainTab tab in _mainTabs)
+        {
+            if (EditorUtilities.Button(tab.Name, tab == _selectedTab ? Color.cyan : Color.white))
+            {
+                _selectedTab = tab;
+
+                if(tab != _mainTabs[0])
+                {
+                    Transaction[] categoryTransactions = GetTransactions(tab.Name, _monthlyBudget.Month, _monthlyBudget.Year);
+                    _categoryView.Refresh(categoryTransactions.ToList());
+                }
+            }
+        }
+        EditorGUILayout.EndHorizontal();
+
+        // Draw selected tab contents
+        EditorGUILayout.BeginVertical("box");
+        {
+            _selectedTab.Draw(_selectedTab.Name);
+        }
+        EditorGUILayout.EndVertical();
+    }
+
+    /// <summary>
+    /// Draws the overview tab.
+    /// </summary>
+    /// <param name="unusedCategory">Unused category name.</param>
+    private void DrawOverview(string unusedCategory)
+    {
+        DrawCategories();
+        DrawTabs();
     }
 
     /// <summary>
@@ -508,6 +609,67 @@ public class MonthlyBudgetController
             }
         }
         EditorGUILayout.EndHorizontal();
+    }
+
+    /// <summary>
+    /// Draws the given category.
+    /// </summary>
+    /// <param name="categoryName">Category name.</param>
+    private void DrawCategory(string categoryName)
+    {
+        EditorUtilities.BeginHorizontalCentering();
+        {
+            EditorUtilities.ContentWidthLabel(categoryName, EditorStyles.boldLabel);
+        }
+        EditorUtilities.EndHorizontalCentering();
+
+        EditorUtilities.BeginHorizontalCentering();
+        EditorGUILayout.BeginVertical("box");
+        {
+            EditorGUILayout.BeginHorizontal();
+            {
+                EditorGUILayout.LabelField("Percentage", EditorStyles.boldLabel, GUILayout.Width(100.0f));
+                EditorGUILayout.LabelField("Previous Balance", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(80.0f));
+                EditorGUILayout.LabelField("Expenses", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(80.0f));
+                EditorGUILayout.LabelField("Income", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(80.0f));
+                EditorGUILayout.LabelField("Current Balance", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(80.0f));
+            }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            {
+
+                float percentage = _monthlyBudget.GetPercentage(categoryName);
+                decimal previousBalance = _previousBalancePerCategory[categoryName];
+                decimal expenses = _expensesPerCategory[categoryName];
+                decimal income = _incomePerCategory[categoryName];
+                decimal currentBalance = previousBalance + expenses + income;
+
+                EditorGUILayout.LabelField(percentage.ToString("P"), GUILayout.Width(100.0f));
+                EditorGUILayout.LabelField(previousBalance.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
+                EditorGUILayout.LabelField(expenses.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
+                EditorGUILayout.LabelField(income.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
+                EditorGUILayout.LabelField(currentBalance.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+        EditorGUILayout.EndVertical();
+        EditorUtilities.EndHorizontalCentering();
+
+        GUILayout.Space(16.0f);
+
+        EditorUtilities.BeginHorizontalCentering();
+        EditorGUILayout.BeginVertical();
+        if (_categoryView.HasTransactions)
+        {
+            _categoryView.Draw();
+        }
+        else
+        {
+            EditorUtilities.ContentWidthLabel("(There are no transactions in this category)");
+        }
+        EditorGUILayout.EndVertical();
+        EditorUtilities.EndHorizontalCentering();
     }
 
     #endregion GUI
