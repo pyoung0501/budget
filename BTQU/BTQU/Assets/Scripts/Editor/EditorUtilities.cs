@@ -266,17 +266,44 @@ internal class EditorUtilities
     }
     
     private static Stack<Color> _backgroundColorStack = new Stack<Color>();
+    private static Stack<Color> _foregroundColorStack = new Stack<Color>();
     internal static Color BackgroundColor { get { return _backgroundColorStack.Peek(); } }
+    internal static Color ForegroundColor { get { return _foregroundColorStack.Peek(); } }
 
+    /// <summary>
+    /// Begins a background color section.
+    /// </summary>
+    /// <param name="color">Color to set background to.</param>
     internal static void BeginBackgroundColor(Color color)
     {
         _backgroundColorStack.Push(GUI.backgroundColor);
         GUI.backgroundColor = color;
     }
 
+    /// <summary>
+    /// Ends a background color section.
+    /// </summary>
     internal static void EndBackgroundColor()
     {
         GUI.backgroundColor = _backgroundColorStack.Pop();
+    }
+
+    /// <summary>
+    /// Begins a foreground color section.
+    /// </summary>
+    /// <param name="color">Color to set foreground to.</param>
+    internal static void BeginForegroundColor(Color color)
+    {
+        _foregroundColorStack.Push(GUI.contentColor);
+        GUI.contentColor = color;
+    }
+
+    /// <summary>
+    /// Ends a foreground color section.
+    /// </summary>
+    internal static void EndForegroundColor()
+    {
+        GUI.contentColor = _foregroundColorStack.Pop();
     }
 
     /// <summary>

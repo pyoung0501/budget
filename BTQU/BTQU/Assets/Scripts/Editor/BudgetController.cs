@@ -1,14 +1,21 @@
-﻿using BTQLib;
+﻿using BTQ;
+using BTQLib;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using System;
 
 /// <summary>
 /// Controller for the budget.
 /// </summary>
 public class BudgetController
 {
+    // Column widths for the summary data.
+    private const float MonthNameWidth = 80.0f;
+    private const float ExpensesWidth = 100.0f;
+    private const float IncomeWidth = 100.0f;
+    private const float NetWidth = 100.0f;
+    private const float BalanceWidth = 100.0f;
+
     /// <summary>
     /// Profile with budget.
     /// </summary>
@@ -38,6 +45,11 @@ public class BudgetController
     /// Controller for the selected monthly budget.
     /// </summary>
     private MonthlyBudgetController _monthlyBudgetController;
+
+    /// <summary>
+    /// The summary items for each month of the current year.
+    /// </summary>
+    private MonthlySummaryItem[] _monthlySummaryItems;
 
     /// <summary>
     /// List of month names in chronological order.
@@ -72,6 +84,8 @@ public class BudgetController
             _minYear = _profile.Budget.MonthlyBudgets[0].Year;
             _maxYear = _profile.Budget.MonthlyBudgets[_profile.Budget.MonthlyBudgets.Count - 1].Year;
             _currYear = _maxYear;
+
+            UpdateMonthlySummaryData();
         }
     }
 
@@ -107,18 +121,28 @@ public class BudgetController
             return;
         }
 
-        _scrollPos =
-        EditorGUILayout.BeginScrollView(_scrollPos);
+        EditorGUILayout.BeginHorizontal();
         {
-            EditorUtilities.BeginHorizontalCentering();
-            EditorGUILayout.BeginVertical();
+            DrawSummaryData();
+
+            EditorGUILayout.BeginVertical("box");
             {
-                DrawMonths();
+                _scrollPos =
+                EditorGUILayout.BeginScrollView(_scrollPos);
+                {
+                    EditorUtilities.BeginHorizontalCentering();
+                    EditorGUILayout.BeginVertical();
+                    {
+                        DrawMonths();
+                    }
+                    EditorGUILayout.EndVertical();
+                    EditorUtilities.EndHorizontalCentering();
+                }
+                EditorGUILayout.EndScrollView();
             }
             EditorGUILayout.EndVertical();
-            EditorUtilities.EndHorizontalCentering();
         }
-        EditorGUILayout.EndScrollView();
+        EditorGUILayout.EndHorizontal();
 
         GUILayout.FlexibleSpace();
 
@@ -128,6 +152,7 @@ public class BudgetController
             if(EditorUtilities.ContentWidthButton("<<", _minYear < _currYear))
             {
                 --_currYear;
+                UpdateMonthlySummaryData();
             }
 
             GUILayout.FlexibleSpace();
@@ -141,9 +166,106 @@ public class BudgetController
             if(EditorUtilities.ContentWidthButton(">>", _maxYear > _currYear))
             {
                 ++_currYear;
+                UpdateMonthlySummaryData();
             }
         }
         EditorGUILayout.EndHorizontal();
+    }
+
+    /// <summary>
+    /// Draws the summary data.
+    /// </summary>
+    private void DrawSummaryData()
+    {
+        EditorGUILayout.BeginVertical("box");
+        {
+            // Column Headings
+            EditorGUILayout.BeginHorizontal();
+            {
+                EditorGUILayout.LabelField("", GUILayout.Width(MonthNameWidth));
+                EditorGUILayout.LabelField("Expenses", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(ExpensesWidth));
+                EditorGUILayout.LabelField("Income", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(IncomeWidth));
+                EditorGUILayout.LabelField("Net", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(NetWidth));
+                EditorGUILayout.LabelField("Balance", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(BalanceWidth));
+            }
+            EditorGUILayout.EndHorizontal();
+            
+            // Draw Non-Existent Summary Data for beginning months
+            int monthNumber = 1;
+            int firstSummaryMonth = _monthlySummaryItems.Length > 0 ? _monthlySummaryItems[0].monthNumber : 13;
+            EditorUtilities.BeginEnabled(false);
+            while (monthNumber < firstSummaryMonth)
+            {
+                EditorGUILayout.BeginHorizontal();
+                {
+                    string monthName = _monthNames[monthNumber - 1];
+
+                    EditorGUILayout.LabelField(monthName, EditorStyles.boldLabel, GUILayout.Width(MonthNameWidth));
+                    EditorGUILayout.LabelField("---", Styles.RightAlignedLabel, GUILayout.Width(ExpensesWidth));
+                    EditorGUILayout.LabelField("---", Styles.RightAlignedLabel, GUILayout.Width(IncomeWidth));
+                    EditorGUILayout.LabelField("---", Styles.RightAlignedLabel, GUILayout.Width(NetWidth));
+                    EditorGUILayout.LabelField("---", Styles.RightAlignedLabel, GUILayout.Width(BalanceWidth));
+                }
+                EditorGUILayout.EndHorizontal();
+
+                ++monthNumber;
+            }
+            EditorUtilities.EndEnabled();
+
+            // Draw summary data for existing months
+            for (int iMonth = 0; iMonth < _monthlySummaryItems.Length; iMonth++)
+            {
+                MonthlySummaryItem summaryItem = _monthlySummaryItems[iMonth];
+
+                EditorGUILayout.BeginHorizontal();
+                {
+                    string monthName = _monthNames[summaryItem.monthNumber - 1];
+                    Color netColor = Color.black;
+                    if (summaryItem.netAmount < 0)
+                    {
+                        netColor = Color.red;
+                    }
+                    else if (summaryItem.netAmount > 0)
+                    {
+                        netColor = Color.green;
+                    }
+
+                    EditorGUILayout.LabelField(monthName, EditorStyles.boldLabel, GUILayout.Width(MonthNameWidth));
+                    EditorGUILayout.LabelField(summaryItem.totalExpenses.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(ExpensesWidth));
+                    EditorGUILayout.LabelField(summaryItem.totalIncome.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(IncomeWidth));
+                    EditorUtilities.BeginForegroundColor(netColor);
+                    EditorGUILayout.LabelField(summaryItem.netAmount.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(NetWidth));
+                    EditorUtilities.EndForegroundColor();
+                    EditorGUILayout.LabelField(summaryItem.balance.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(BalanceWidth));
+                }
+                EditorGUILayout.EndHorizontal();
+
+                ++monthNumber;
+            }
+
+            // Draw Non-Existent Summary Data for ending months
+            EditorUtilities.BeginEnabled(false);
+            while (monthNumber < 13)
+            {
+                EditorGUILayout.BeginHorizontal();
+                {
+                    string monthName = _monthNames[monthNumber - 1];
+
+                    EditorGUILayout.LabelField(monthName, GUILayout.Width(MonthNameWidth));
+                    EditorGUILayout.LabelField("---", Styles.RightAlignedLabel, GUILayout.Width(ExpensesWidth));
+                    EditorGUILayout.LabelField("---", Styles.RightAlignedLabel, GUILayout.Width(IncomeWidth));
+                    EditorGUILayout.LabelField("---", Styles.RightAlignedLabel, GUILayout.Width(NetWidth));
+                    EditorGUILayout.LabelField("---", Styles.RightAlignedLabel, GUILayout.Width(BalanceWidth));
+                }
+                EditorGUILayout.EndHorizontal();
+
+                ++monthNumber;
+            }
+            EditorUtilities.EndEnabled();
+
+            GUILayout.FlexibleSpace();
+        }
+        EditorGUILayout.EndVertical();
     }
 
     /// <summary>
@@ -170,6 +292,7 @@ public class BudgetController
                         if (isNextBudget)
                         {
                             AddNextMonthlyBudget();
+                            UpdateMonthlySummaryData();
                         }
                         else
                         {
@@ -205,6 +328,7 @@ public class BudgetController
                 if (MonthButton(1, true, true, 50f))
                 {
                     AddNextMonthlyBudget();
+                    UpdateMonthlySummaryData();
                 }
             }
             EditorGUILayout.EndHorizontal();
@@ -234,5 +358,66 @@ public class BudgetController
         string text = next ? "+" : enabled ? _monthNames[month - 1] : "";
         Color color = next ? new Color(0.75f, 1.0f, 0.75f) : Color.white;
         return EditorUtilities.Button(text, color, enabled, GUILayout.Width(size), GUILayout.Height(size));
+    }
+
+
+    /// <summary>
+    /// Summary data for an individual month.
+    /// </summary>
+    private class MonthlySummaryItem
+    {
+        /// <summary>
+        /// The number of the month this corresponds to (1 to 12).
+        /// </summary>
+        public int monthNumber;
+
+        /// <summary>
+        /// Total expenses for the month.
+        /// </summary>
+        public decimal totalExpenses;
+
+        /// <summary>
+        /// Total income for the month.
+        /// </summary>
+        public decimal totalIncome;
+
+        /// <summary>
+        /// Net amount of expenses and income.
+        /// </summary>
+        public decimal netAmount;
+
+        /// <summary>
+        /// Balance up through this month.
+        /// </summary>
+        public decimal balance;
+    }
+
+    /// <summary>
+    /// Updates the monthly summary data.
+    /// </summary>
+    private void UpdateMonthlySummaryData()
+    {
+        MonthlyBudget[] currentYearMonthlyBudgets = _profile.Budget.MonthlyBudgets.Where(mb => mb.Year == _currYear).ToArray();
+        _monthlySummaryItems = currentYearMonthlyBudgets.Select<MonthlyBudget, MonthlySummaryItem>(GenerateSummaryItem).ToArray();
+    }
+
+    /// <summary>
+    /// Generates a monthly summary item for the given monthly budget.
+    /// </summary>
+    /// <param name="monthlyBudget">Monthly budget.</param>
+    /// <returns>A monthly summary item created from the given monthly budget.</returns>
+    private MonthlySummaryItem GenerateSummaryItem(MonthlyBudget monthlyBudget)
+    {
+        decimal expenses = BudgetUtilities.GetTotalExpenses(_profile, monthlyBudget);
+        decimal income = BudgetUtilities.GetTotalIncome(_profile, monthlyBudget);
+
+        return new MonthlySummaryItem()
+        {
+            monthNumber = monthlyBudget.Month,
+            totalExpenses = expenses,
+            totalIncome = income,
+            netAmount = expenses + income,
+            balance = BudgetUtilities.GetBalance(_profile, monthlyBudget)
+        };
     }
 }

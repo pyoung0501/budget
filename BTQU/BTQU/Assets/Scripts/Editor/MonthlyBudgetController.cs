@@ -244,8 +244,8 @@ public class MonthlyBudgetController
     /// </summary>
     private void Refresh()
     {
-        _incomeTransactions = GetIncomeTransactions(_monthlyBudget);
-        _expenseTransactions = GetExpenseTransactions(_monthlyBudget);
+        _incomeTransactions = BudgetUtilities.GetIncomeTransactions(_profile, _monthlyBudget);
+        _expenseTransactions = BudgetUtilities.GetExpenseTransactions(_profile, _monthlyBudget);
         _uncategorizedExpenses = GetUncategorizedExpenses(_monthlyBudget);
         _uncategorizedIncome = GetUncategorizedIncome(_monthlyBudget);
 
@@ -673,55 +673,7 @@ public class MonthlyBudgetController
     }
 
     #endregion GUI
-
-    /// <summary>
-    /// Gets the income transactions for the given monthly budget.
-    /// </summary>
-    /// <param name="monthlyBudget">Month budget.</param>
-    /// <returns>The income transactions for the given monthly budget.</returns>
-    private Transaction[] GetIncomeTransactions(MonthlyBudget monthlyBudget)
-    {
-        return GetIncomeTransactions(monthlyBudget.Month, monthlyBudget.Year);
-    }
-
-    /// <summary>
-    /// Gets the income transactions for the given month and year.
-    /// </summary>
-    /// <param name="month">Month.</param>
-    /// <param name="year">Year.</param>
-    /// <returns>The income transactions for the given month and year.</returns>
-    private Transaction[] GetIncomeTransactions(int month, int year)
-    {
-        return _profile.Accounts.SelectMany(a => a.Transactions)
-                                .Where(t => t.Date.Year == year && t.Date.Month == month)
-                                .Where(t => t.Amount > 0)
-                                .ToArray();
-    }
-
-    /// <summary>
-    /// Gets the expense transactions for the given monthly budget.
-    /// </summary>
-    /// <param name="monthlyBudget">Monthly budget.</param>
-    /// <returns>The expense transactions for the given monthly budget.</returns>
-    private Transaction[] GetExpenseTransactions(MonthlyBudget monthlyBudget)
-    {
-        return GetExpenseTransactions(monthlyBudget.Month, monthlyBudget.Year);
-    }
-
-    /// <summary>
-    /// Gets the expense transactions for the given month and year.
-    /// </summary>
-    /// <param name="month">Month.</param>
-    /// <param name="year">Year.</param>
-    /// <returns>The expense transactions for the given month and year.</returns>
-    private Transaction[] GetExpenseTransactions(int month, int year)
-    {
-        return _profile.Accounts.SelectMany(a => a.Transactions)
-                                .Where(t => t.Date.Year == year && t.Date.Month == month)
-                                .Where(t => t.Amount < 0)
-                                .ToArray();
-    }
-
+        
     /// <summary>
     /// Gets the uncategorized expenses for the given monthly budget.
     /// </summary>
@@ -729,7 +681,7 @@ public class MonthlyBudgetController
     /// <returns>The uncategorized expenses for the given monthly budget.</returns>
     private Transaction[] GetUncategorizedExpenses(MonthlyBudget monthlyBudget)
     {
-        Transaction[] expenseTransactions = GetExpenseTransactions(monthlyBudget);
+        Transaction[] expenseTransactions = BudgetUtilities.GetExpenseTransactions(_profile, monthlyBudget);
         return expenseTransactions.Where(t => !Transactions.IsCategorized(t, _profile.Categories))
                                   .ToArray();
     }
@@ -741,7 +693,7 @@ public class MonthlyBudgetController
     /// <returns>The uncategorized income transactions for the given monthly budget.</returns>
     private Transaction[] GetUncategorizedIncome(MonthlyBudget monthlyBudget)
     {
-        Transaction[] incomeTransactions = GetIncomeTransactions(monthlyBudget);
+        Transaction[] incomeTransactions = BudgetUtilities.GetIncomeTransactions(_profile, monthlyBudget);
         return incomeTransactions.Where(t => !Transactions.IsCategorized(t, _profile.Categories)
                                              || t.AppliedState == AppliedState.NotApplied
                                              || (t.AppliedState == AppliedState.ApplyToCategory && !_profile.Categories.PrimaryCategoryExists(t.AppliedToCategory)))
@@ -820,7 +772,7 @@ public class MonthlyBudgetController
         float percentage = monthlyBudget.GetPercentage(category);
         decimal incomeFromWhole = GetIncomeAppliedToWhole(monthlyBudget) * (decimal)percentage;
 
-        Transaction[] incomeTransactions = GetIncomeTransactions(monthlyBudget);
+        Transaction[] incomeTransactions = BudgetUtilities.GetIncomeTransactions(_profile, monthlyBudget);
         decimal incomeFromSpecific = incomeTransactions.Where(t => t.AppliedState == AppliedState.ApplyToCategory)
                                                        .Where(t => t.AppliedToCategory == category)
                                                        .Sum(t => t.Amount);
@@ -835,7 +787,7 @@ public class MonthlyBudgetController
     /// <returns>The amount in income applied to all categories in the given monthly budget.</returns>
     private decimal GetIncomeAppliedToWhole(MonthlyBudget monthlyBudget)
     {
-        Transaction[] incomeTransactions = GetIncomeTransactions(monthlyBudget);
+        Transaction[] incomeTransactions = BudgetUtilities.GetIncomeTransactions(_profile, monthlyBudget);
         return incomeTransactions.Where(t => t.AppliedState == AppliedState.ApplyToWhole)
                                  .Sum(t => t.Amount);
     }
@@ -872,7 +824,7 @@ public class MonthlyBudgetController
         Dictionary<string, decimal> previousBalancePerCategory = new Dictionary<string, decimal>();
         foreach (string category in _profile.Categories.PrimaryCategories)
         {
-            MonthlyBudget prevMonthlyBudget = GetPreviousMonthlyBudget(monthlyBudget);
+            MonthlyBudget prevMonthlyBudget = BudgetUtilities.GetPreviousMonthlyBudget(_profile, monthlyBudget);
             if (prevMonthlyBudget != null)
             {
                 previousBalancePerCategory.Add(category, GetBalance(prevMonthlyBudget, category));
@@ -887,18 +839,6 @@ public class MonthlyBudgetController
     }
 
     /// <summary>
-    /// Gets the monthly budget previous to the given one or null if there is
-    /// not a previous one.
-    /// </summary>
-    /// <param name="monthlyBudget">Monthly budget.</param>
-    /// <returns>The monthly budget previous to the given one.</returns>
-    private MonthlyBudget GetPreviousMonthlyBudget(MonthlyBudget monthlyBudget)
-    {
-        int prevIndex = _profile.Budget.MonthlyBudgets.IndexOf(monthlyBudget) - 1;
-        return prevIndex >= 0 ? _profile.Budget.MonthlyBudgets[prevIndex] : null;
-    }
-
-    /// <summary>
     /// Gets the balance for the category in the given monthly budget.
     /// </summary>
     /// <param name="monthlyBudget">Monthly budget.</param>
@@ -908,7 +848,7 @@ public class MonthlyBudgetController
     {
         decimal previousBalance;
         {
-            MonthlyBudget prevMonthlyBudget = GetPreviousMonthlyBudget(monthlyBudget);
+            MonthlyBudget prevMonthlyBudget = BudgetUtilities.GetPreviousMonthlyBudget(_profile, monthlyBudget);
             previousBalance = prevMonthlyBudget != null
                             ? GetBalance(prevMonthlyBudget, category)
                             : 0;
@@ -928,7 +868,7 @@ public class MonthlyBudgetController
     /// <returns>The balance of the uncategorized transactions for the previous monthly budget.</returns>
     private decimal GetPreviousUncategorizedBalance(MonthlyBudget monthlyBudget)
     {
-        MonthlyBudget prevMonthlyBudget = GetPreviousMonthlyBudget(monthlyBudget);
+        MonthlyBudget prevMonthlyBudget = BudgetUtilities.GetPreviousMonthlyBudget(_profile, monthlyBudget);
         if (prevMonthlyBudget != null)
         {
             return GetUncategorizedBalance(prevMonthlyBudget);
@@ -946,7 +886,7 @@ public class MonthlyBudgetController
     {
         decimal previousUncategorizedBalance;
         {
-            MonthlyBudget prevMonthlyBudget = GetPreviousMonthlyBudget(monthlyBudget);
+            MonthlyBudget prevMonthlyBudget = BudgetUtilities.GetPreviousMonthlyBudget(_profile, monthlyBudget);
             previousUncategorizedBalance = prevMonthlyBudget != null
                                          ? GetUncategorizedBalance(prevMonthlyBudget)
                                          : 0;
