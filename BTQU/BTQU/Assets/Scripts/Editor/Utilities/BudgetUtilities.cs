@@ -1,5 +1,6 @@
 ﻿using BTQLib;
 using System.Linq;
+using System;
 
 public static class BudgetUtilities
 {
@@ -68,13 +69,23 @@ public static class BudgetUtilities
             MonthlyBudget prevMonthlyBudget = GetPreviousMonthlyBudget(profile, monthlyBudget);
             previousBalance = prevMonthlyBudget != null
                             ? GetBalance(profile, prevMonthlyBudget)
-                            : 0;
+                            : GetStartingBalance(profile);
         }
 
         decimal totalExpenses = GetTotalExpenses(profile, monthlyBudget);
         decimal totalIncome = GetTotalIncome(profile, monthlyBudget);
 
         return previousBalance + totalExpenses + totalIncome;
+    }
+
+    /// <summary>
+    /// Gets the overall starting balance of the profile.
+    /// </summary>
+    /// <param name="profile">Profile.</param>
+    /// <returns>The overall starting balance of the profile.</returns>
+    private static decimal GetStartingBalance(Profile profile)
+    {
+        return profile.Accounts.Select(a => a.StartingBalance).Sum();
     }
 
     /// <summary>

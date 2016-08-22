@@ -831,7 +831,8 @@ public class MonthlyBudgetController
             }
             else
             {
-                previousBalancePerCategory.Add(category, 0);
+                decimal startingBalance = GetStartingBalance(category);
+                previousBalancePerCategory.Add(category, startingBalance);
             }
         }
 
@@ -851,7 +852,7 @@ public class MonthlyBudgetController
             MonthlyBudget prevMonthlyBudget = BudgetUtilities.GetPreviousMonthlyBudget(_profile, monthlyBudget);
             previousBalance = prevMonthlyBudget != null
                             ? GetBalance(prevMonthlyBudget, category)
-                            : 0;
+                            : GetStartingBalance(category);
         }
                 
         decimal totalExpenses = GetExpenses(monthlyBudget, category);
@@ -874,7 +875,7 @@ public class MonthlyBudgetController
             return GetUncategorizedBalance(prevMonthlyBudget);
         }
 
-        return 0;
+        return GetUnassignedStartingBalance();
     }
 
     /// <summary>
@@ -889,12 +890,38 @@ public class MonthlyBudgetController
             MonthlyBudget prevMonthlyBudget = BudgetUtilities.GetPreviousMonthlyBudget(_profile, monthlyBudget);
             previousUncategorizedBalance = prevMonthlyBudget != null
                                          ? GetUncategorizedBalance(prevMonthlyBudget)
-                                         : 0;
+                                         : GetUnassignedStartingBalance();
         }
 
         decimal totalUncategorizedExpenses = GetTotalUncategorizedExpenses(monthlyBudget);
         decimal totalUncategorizedIncome = GetTotalUncategorizedIncome(monthlyBudget);
 
         return previousUncategorizedBalance + totalUncategorizedExpenses + totalUncategorizedIncome;
+    }
+
+    /// <summary>
+    /// Gets the starting balance for the specified category.
+    /// </summary>
+    /// <param name="category">Category.</param>
+    /// <returns>The starting balance for the specified category.</returns>
+    private decimal GetStartingBalance(string category)
+    {
+        return _profile.Accounts.Where(a => a.StartingDistribution.ContainsKey(category))
+                                .Select(a => a.StartingDistribution[category])
+                                .Sum();
+    }
+
+    /// <summary>
+    /// Gets the unassigned starting balance.
+    /// </summary>
+    /// <returns>The unassigned starting balance.</returns>
+    private decimal GetUnassignedStartingBalance()
+    {
+        decimal totalAssigned = _profile.Accounts.Select(a => a.StartingDistribution.Sum(kvp => kvp.Value))
+                                                 .Sum();
+
+        decimal totalBalance = _profile.Accounts.Sum(a => a.StartingBalance);
+
+        return totalBalance - totalAssigned;
     }
 }

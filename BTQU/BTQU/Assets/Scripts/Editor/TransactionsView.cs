@@ -124,13 +124,14 @@ public class TransactionsView
     /// Draws the list of transactions according to the columns specified
     /// in the settings.
     /// </summary>
-    public void Draw()
+    /// <param name="initialBalance">Optional initial balance.</param>
+    public void Draw(decimal initialBalance = 0)
     {
         DrawTransactionColumnHeaders();
 
         _scrollPos = EditorGUILayout.BeginScrollView(_scrollPos);
         {
-            decimal balance = 0;
+            decimal balance = initialBalance;
             foreach (Transaction transaction in _sortedTransactions)
             {
                 balance += transaction.Amount;

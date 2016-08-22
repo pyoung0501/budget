@@ -24,6 +24,17 @@ namespace BTQLib
         public string Institution { get; set; }
 
         /// <summary>
+        /// The balance of the account prior to any of the
+        /// transactions.
+        /// </summary>
+        public decimal StartingBalance { get; set; }
+
+        /// <summary>
+        /// The distribution of the starting balance to budget categories.
+        /// </summary>
+        public Dictionary<string, decimal> StartingDistribution { get { return _startingDistribution; } }
+
+        /// <summary>
         /// Transactions within the account.
         /// </summary>
         public IList<Transaction> Transactions
@@ -33,10 +44,15 @@ namespace BTQLib
 
 
         /// <summary>
+        /// The distribution of the starting balance to budget categories.
+        /// </summary>
+        private Dictionary<string, decimal> _startingDistribution = new Dictionary<string, decimal>();
+
+        /// <summary>
         /// Transactions within the account.
         /// </summary>
         private List<Transaction> _transactions = new List<Transaction>();
-        
+
 
         /// <summary>
         /// Constructs a blank Account.

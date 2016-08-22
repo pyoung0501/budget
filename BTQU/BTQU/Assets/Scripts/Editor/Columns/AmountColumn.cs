@@ -19,20 +19,7 @@ public class AmountColumn : TransactionColumn
     /// </summary>
     /// <param name="transaction">Transaction to draw.</param>
     public override void Draw(Transaction transaction)
-    {       
-        string prevVal = transaction.Amount.ToString("C2");
-        string newVal = EditorGUILayout.TextField(prevVal, Styles.RightAlignedTextField, GUILayout.Width(Width));
-        
-        if (newVal != prevVal)
-        {
-            newVal = newVal.Replace("$", "");
-
-            decimal amount;
-            if (decimal.TryParse(newVal, out amount))
-            {
-                amount = Math.Round(amount, 2, MidpointRounding.ToEven);
-                transaction.Amount = amount;
-            }
-        }
+    {
+        transaction.Amount = TransactionUtilities.AmountField(transaction.Amount, GUILayout.Width(Width));
     }
 }

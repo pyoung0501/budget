@@ -62,9 +62,36 @@ public class AccountController
     {
         EditorGUILayout.BeginVertical("box");
         {
-            _account.Name = EditorGUILayout.TextField("Name", _account.Name);
-            _account.Institution = EditorGUILayout.TextField("Institution", _account.Institution);
-            _account.Number = EditorGUILayout.TextField("Account No.", _account.Number);
+            EditorGUILayout.BeginHorizontal();
+            {
+                EditorGUILayout.BeginVertical();
+                {
+                    _account.Name = EditorGUILayout.TextField("Name", _account.Name);
+                    _account.Institution = EditorGUILayout.TextField("Institution", _account.Institution);
+                    _account.Number = EditorGUILayout.TextField("Account No.", _account.Number);
+                }
+                EditorGUILayout.EndVertical();
+
+                GUILayout.Space(16.0f);
+
+                EditorGUILayout.BeginVertical();
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    {
+                        EditorGUILayout.LabelField("Starting Balance", GUILayout.Width(EditorGUIUtility.labelWidth));
+
+                        _account.StartingBalance = TransactionUtilities.AmountField(_account.StartingBalance);
+
+                        if(EditorUtilities.ContentWidthButton("Edit Distribution"))
+                        {
+                            StartingDistributionEditor.Create(_account, _profile.Categories);
+                        }
+                    }
+                    EditorGUILayout.EndHorizontal();
+                }
+                EditorGUILayout.EndVertical();
+            }
+            EditorGUILayout.EndHorizontal();
         }
         EditorGUILayout.EndVertical();
         
@@ -92,7 +119,7 @@ public class AccountController
             }
             else
             {
-                _transactionsView.Draw();
+                _transactionsView.Draw(_account.StartingBalance);
 
                 if (EditorUtilities.ContentWidthButton("+ Transaction"))
                 {
