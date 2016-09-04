@@ -99,6 +99,11 @@ public class MonthlyBudgetController
     Dictionary<string, decimal> _previousBalancePerCategory;
 
     /// <summary>
+    /// Mapping of internal transaction balances for each category.
+    /// </summary>
+    Dictionary<string, decimal> _internalBalancePerCategory;
+
+    /// <summary>
     /// View for expense transactions.
     /// </summary>
     private TransactionsView _expensesView;
@@ -254,6 +259,7 @@ public class MonthlyBudgetController
         _previousBalancePerCategory = GetPreviousBalancePerCategory(_monthlyBudget);
         _expensesPerCategory = GetExpensesPerCategory(_monthlyBudget);
         _incomePerCategory = GetIncomePerCategory(_monthlyBudget);
+        _internalBalancePerCategory = GetInternalBalancePerCategory(_monthlyBudget);
 
         _previousUncategorizedBalance = GetPreviousUncategorizedBalance(_monthlyBudget);
         _totalUncategorizedExpenses = GetTotalUncategorizedExpenses(_monthlyBudget);
@@ -331,6 +337,12 @@ public class MonthlyBudgetController
     private void DrawOverview(string unusedCategory)
     {
         DrawCategories();
+
+        if(EditorUtilities.Button("Manage Internal Transactions"))
+        {
+            InternalTransactionsEditor.Create(_profile, _monthlyBudget);
+        }
+
         DrawTabs();
     }
 
@@ -418,6 +430,7 @@ public class MonthlyBudgetController
                 EditorGUILayout.LabelField("Previous Balance", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(80.0f));
                 EditorGUILayout.LabelField("Expenses", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(80.0f));
                 EditorGUILayout.LabelField("Income", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(80.0f));
+                EditorGUILayout.LabelField("Internal Trans", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(80.0f));
                 EditorGUILayout.LabelField("Current Balance", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(80.0f));
             }
             EditorGUILayout.EndHorizontal();
@@ -431,7 +444,8 @@ public class MonthlyBudgetController
                     decimal previousBalance = _previousBalancePerCategory[category];
                     decimal expenses = _expensesPerCategory[category];
                     decimal income = _incomePerCategory[category];
-                    decimal currentBalance = previousBalance + expenses + income;
+                    decimal internalBalance = _internalBalancePerCategory[category];
+                    decimal currentBalance = previousBalance + expenses + income + internalBalance;
 
                     totalPrevious += previousBalance;
                     totalExpenses += expenses;
@@ -441,6 +455,7 @@ public class MonthlyBudgetController
                     EditorGUILayout.LabelField(previousBalance.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
                     EditorGUILayout.LabelField(expenses.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
                     EditorGUILayout.LabelField(income.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
+                    EditorGUILayout.LabelField(internalBalance.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
                     EditorGUILayout.LabelField(currentBalance.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
                 }
                 EditorGUILayout.EndHorizontal();
@@ -465,6 +480,7 @@ public class MonthlyBudgetController
                 EditorGUILayout.LabelField(previousBalance.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
                 EditorGUILayout.LabelField(expenses.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
                 EditorGUILayout.LabelField(income.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
+                EditorGUILayout.LabelField("---", Styles.RightAlignedLabel, GUILayout.Width(80.0f));
                 EditorGUILayout.LabelField(currentBalance.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
             }
             EditorGUILayout.EndHorizontal();
@@ -479,6 +495,7 @@ public class MonthlyBudgetController
                 EditorGUILayout.LabelField(totalPrevious.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
                 EditorGUILayout.LabelField(totalExpenses.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
                 EditorGUILayout.LabelField(totalIncome.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
+                EditorGUILayout.LabelField("---", Styles.RightAlignedLabel, GUILayout.Width(80.0f));
                 EditorGUILayout.LabelField(totalBalance.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
             }
             EditorGUILayout.EndHorizontal();
@@ -632,6 +649,7 @@ public class MonthlyBudgetController
                 EditorGUILayout.LabelField("Previous Balance", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(80.0f));
                 EditorGUILayout.LabelField("Expenses", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(80.0f));
                 EditorGUILayout.LabelField("Income", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(80.0f));
+                EditorGUILayout.LabelField("Internal Trans", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(80.0f));
                 EditorGUILayout.LabelField("Current Balance", Styles.RightAlignedBoldWrappedLabel, GUILayout.Width(80.0f));
             }
             EditorGUILayout.EndHorizontal();
@@ -643,12 +661,14 @@ public class MonthlyBudgetController
                 decimal previousBalance = _previousBalancePerCategory[categoryName];
                 decimal expenses = _expensesPerCategory[categoryName];
                 decimal income = _incomePerCategory[categoryName];
-                decimal currentBalance = previousBalance + expenses + income;
+                decimal internalBalance = _internalBalancePerCategory[categoryName];
+                decimal currentBalance = previousBalance + expenses + income + internalBalance;
 
                 EditorGUILayout.LabelField(percentage.ToString("P"), GUILayout.Width(100.0f));
                 EditorGUILayout.LabelField(previousBalance.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
                 EditorGUILayout.LabelField(expenses.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
                 EditorGUILayout.LabelField(income.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
+                EditorGUILayout.LabelField(internalBalance.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
                 EditorGUILayout.LabelField(currentBalance.ToString("C2"), Styles.RightAlignedLabel, GUILayout.Width(80.0f));
             }
             EditorGUILayout.EndHorizontal();
@@ -793,6 +813,22 @@ public class MonthlyBudgetController
     }
 
     /// <summary>
+    /// Gets the internal transaction balance for each category for the given monthly budget.
+    /// </summary>
+    /// <param name="monthlyBudget">Monthly budget.</param>
+    /// <returns>The internal transaction balance for each category.</returns>
+    private Dictionary<string, decimal> GetInternalBalancePerCategory(MonthlyBudget monthlyBudget)
+    {
+        Dictionary<string, decimal> internalPerCategory = new Dictionary<string, decimal>();
+        foreach (string category in _profile.Categories.PrimaryCategories)
+        {
+            internalPerCategory.Add(category, BudgetUtilities.GetInternalBalance(monthlyBudget, category));
+        }
+
+        return internalPerCategory;
+    }
+
+    /// <summary>
     /// Gets the total uncategorized expenses for the given monthly budget.
     /// </summary>
     /// <param name="monthlyBudget">Monthly budget.</param>
@@ -857,8 +893,9 @@ public class MonthlyBudgetController
                 
         decimal totalExpenses = GetExpenses(monthlyBudget, category);
         decimal totalIncome = GetIncome(monthlyBudget, category);
+        decimal totalInternal = BudgetUtilities.GetInternalBalance(monthlyBudget, category);
 
-        return previousBalance + totalExpenses + totalIncome;
+        return previousBalance + totalExpenses + totalIncome + totalInternal;
     }
 
     /// <summary>
