@@ -39,6 +39,7 @@
     <Compile Include="Account.cs" />
     <Compile Include="Budget.cs" />
     <Compile Include="Categories.cs" />
+    <Compile Include="InternalTransaction.cs" />
     <Compile Include="MonthlyBudget.cs" />
     <Compile Include="Profile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

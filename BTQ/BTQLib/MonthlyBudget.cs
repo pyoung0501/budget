@@ -23,6 +23,12 @@ namespace BTQLib
         public Dictionary<string, float> CategoryPercentages { get { return _categoryPercentages; } }
 
         /// <summary>
+        /// The internal transactions for this month (transactions
+        /// between budget categories).
+        /// </summary>
+        public List<InternalTransaction> InternalTransactions { get { return _internalTransactions; } }
+
+        /// <summary>
         /// Budget month.
         /// </summary>
         private int _month;
@@ -36,6 +42,12 @@ namespace BTQLib
         /// Categories mapped to percentages.
         /// </summary>
         private Dictionary<string, float> _categoryPercentages = new Dictionary<string, float>();
+        
+        /// <summary>
+        /// The internal transactions for this month (transactions
+        /// between budget categories).
+        /// </summary>
+        private List<InternalTransaction> _internalTransactions = new List<InternalTransaction>();
 
         /// <summary>
         /// Constructor.
