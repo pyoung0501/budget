@@ -96,7 +96,14 @@ namespace BTQLib
                     ++year;
                 }
 
-                _monthlyBudgets.Add(new MonthlyBudget(month, year));
+                // Copy over the category percentages from the previous month
+                MonthlyBudget newMonthlyBudget = new MonthlyBudget(month, year);
+                foreach (var kvp in lastMonthlyBudget.CategoryPercentages)
+                {
+                    newMonthlyBudget.SetPercentage(kvp.Key, kvp.Value);
+                }
+
+                _monthlyBudgets.Add(newMonthlyBudget);
                 return true;
             }
             else
