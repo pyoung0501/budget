@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Collections.Generic;
 
 namespace BTQLib
 {
@@ -47,10 +47,23 @@ namespace BTQLib
         public string AppliedToCategory { get; set; }
 
         /// <summary>
+        /// List of split transaction entries.  If split entries exist,
+        /// the Category field will be ignored.  The individial category entries
+        /// will be used instead.
+        /// </summary>
+        public List<SplitEntry> SplitEntries { get; set; }
+
+        /// <summary>
         /// Additional data for the transaction if it was imported.
         /// Manually input transactions should not have any import data.
         /// </summary>
         public ImportData ImportData { get; set; }
+        
+        /// <summary>
+        /// True if the transaction is split across categories; otherwise, false.
+        /// </summary>
+        public bool IsSplit { get { return SplitEntries != null && SplitEntries.Count > 0; } }
+
 
         /// <summary>
         /// Constructor.
@@ -97,6 +110,27 @@ namespace BTQLib
         /// of the transaction.  This may or may not be set.
         /// </summary>
         public int? CheckOrSlipNo { get; set; }
+    }
+
+    /// <summary>
+    /// A single split entry within a transaction.
+    /// </summary>
+    public class SplitEntry
+    {
+        /// <summary>
+        /// Description of the split entry.
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
+        /// Category to assign entry to.
+        /// </summary>
+        public string Category { get; set; }
+
+        /// <summary>
+        /// Amount of the entry.
+        /// </summary>
+        public decimal Amount { get; set; }
     }
 
     /// <summary>

@@ -117,6 +117,12 @@ public class MonthlyBudgetController
     /// View for category transactions.
     /// </summary>
     private TransactionsView _categoryView;
+
+    /// <summary>
+    /// The column displaying transaction category amounts.  Used in the 
+    /// category view.
+    /// </summary>
+    private CategoryAmountColumn _categoryAmountColumn;
     
     /// <summary>
     /// Whether or not to show all the transactions, or only the 
@@ -229,6 +235,7 @@ public class MonthlyBudgetController
                 }
             });
 
+        _categoryAmountColumn = new CategoryAmountColumn() { Width = 100.0f, Editable = false };
         _categoryView = new TransactionsView(
             new TransactionsView.Settings()
             {
@@ -237,7 +244,8 @@ public class MonthlyBudgetController
                     new DateColumn() { Width = 80.0f, Editable = false },
                     new PayeeColumn() { Width = 300.0f, Editable = false },
                     new DescriptionColumn() { Width = 300.0f, Editable = false },
-                    new AmountColumn() { Width = 100.0f, Editable = false }
+                    _categoryAmountColumn,
+                    new SplitIndicatorColumn() { Width = 50.0f, Editable = false }
                 }
             });
 
@@ -317,6 +325,7 @@ public class MonthlyBudgetController
                 {
                     Transaction[] categoryTransactions = GetTransactions(tab.Name, _monthlyBudget.Month, _monthlyBudget.Year);
                     _categoryView.Refresh(categoryTransactions.ToList());
+                    _categoryAmountColumn.PrimaryCategory = tab.Name;
                 }
             }
         }
@@ -745,8 +754,9 @@ public class MonthlyBudgetController
     private decimal GetExpenses(MonthlyBudget monthlyBudget, string category)
     {
         Transaction[] transactions = GetTransactions(category, monthlyBudget.Month, monthlyBudget.Year);
-        transactions = transactions.Where(t => t.Amount < 0).ToArray();
-        return transactions.Sum(t => t.Amount);
+        return transactions.Where(t => t.Amount < 0)
+                           .Select(t => Transactions.AmountForPrimaryCategory(t, category))
+                           .Sum();
     }
 
     /// <summary>
@@ -759,8 +769,8 @@ public class MonthlyBudgetController
     private Transaction[] GetTransactions(string category, int month, int year)
     {
         return _profile.Accounts.SelectMany(a => a.Transactions)
-                                .Where(t => !string.IsNullOrEmpty(t.Category) && t.Category.StartsWith(category))
                                 .Where(t => t.Date.Year == year && t.Date.Month == month)
+                                .Where(t => Transactions.AppliesToPrimaryCategory(t, category))
                                 .ToArray();
     }
 
@@ -836,7 +846,8 @@ public class MonthlyBudgetController
     private decimal GetTotalUncategorizedExpenses(MonthlyBudget monthlyBudget)
     {
         Transaction[] uncategorizedExpenses = GetUncategorizedExpenses(monthlyBudget);
-        return uncategorizedExpenses.Sum(t => t.Amount);
+        return uncategorizedExpenses.Select(it => Transactions.UncategorizedAmount(it, _profile.Categories))
+                                    .Sum();
     }
 
     /// <summary>

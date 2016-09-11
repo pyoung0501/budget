@@ -1,5 +1,6 @@
 ﻿using BTQ;
 using BTQLib;
+using BTQLib.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,6 +57,29 @@ public class TransactionsView
     /// Settings for the transactions view.
     /// </summary>
     private Settings _settings;
+
+    /// <summary>
+    /// Sorter for the category amount column.
+    /// </summary>
+    private CategoryAmountColumnSorter _categoryAmountSorter;
+
+    /// <summary>
+    /// Sorter for the category amount column created on first access.
+    /// </summary>
+    private CategoryAmountColumnSorter CategoryAmountSorter
+    {
+        get
+        {
+            if(_categoryAmountSorter == null)
+            {
+                // TODO provide more error checking for missing column
+                _categoryAmountSorter = new CategoryAmountColumnSorter(
+                    _settings.Columns.First(tc => tc is CategoryAmountColumn) as CategoryAmountColumn);
+            }
+
+            return _categoryAmountSorter;
+        }
+    }
 
     /// <summary>
     /// Whether or not the view has any transactions in it.
@@ -408,6 +432,14 @@ public class TransactionsView
                 {
                     orderedTransactions = _sourceTransactions.OrderBy(AppliedToCategory);
                 }
+                else if (_primarySortedColumn is CategoryAmountColumn)
+                {
+                    orderedTransactions = _sourceTransactions.OrderBy<Transaction, decimal>(CategoryAmountSorter.Func);
+                }
+                else if(_primarySortedColumn is SplitIndicatorColumn)
+                {
+                    orderedTransactions = _sourceTransactions.OrderBy(SplitIndicator);
+                }
             }
             else if (_primarySortedState == SortedState.Descending)
             {
@@ -438,6 +470,14 @@ public class TransactionsView
                 else if (_primarySortedColumn is CategoryAppliedToColumn)
                 {
                     orderedTransactions = _sourceTransactions.OrderByDescending(AppliedToCategory);
+                }
+                else if (_primarySortedColumn is CategoryAmountColumn)
+                {
+                    orderedTransactions = _sourceTransactions.OrderByDescending<Transaction, decimal>(CategoryAmountSorter.Func);
+                }
+                else if (_primarySortedColumn is SplitIndicatorColumn)
+                {
+                    orderedTransactions = _sourceTransactions.OrderByDescending(SplitIndicator);
                 }
             }
             else
@@ -482,6 +522,14 @@ public class TransactionsView
                 {
                     orderedTransactions = orderedTransactions.ThenBy(AppliedToCategory);
                 }
+                else if (_primarySortedColumn is CategoryAmountColumn)
+                {
+                    orderedTransactions = orderedTransactions.ThenBy<Transaction, decimal>(CategoryAmountSorter.Func);
+                }
+                else if (_primarySortedColumn is SplitIndicatorColumn)
+                {
+                    orderedTransactions = orderedTransactions.ThenBy(SplitIndicator);
+                }
             }
             else if (_secondarySortedState == SortedState.Descending)
             {
@@ -512,6 +560,14 @@ public class TransactionsView
                 else if (_primarySortedColumn is CategoryAppliedToColumn)
                 {
                     orderedTransactions = orderedTransactions.ThenByDescending(AppliedToCategory);
+                }
+                else if (_primarySortedColumn is CategoryAmountColumn)
+                {
+                    orderedTransactions = orderedTransactions.ThenByDescending<Transaction, decimal>(CategoryAmountSorter.Func);
+                }
+                else if (_primarySortedColumn is SplitIndicatorColumn)
+                {
+                    orderedTransactions = orderedTransactions.ThenByDescending(SplitIndicator);
                 }
             }
         }
@@ -558,8 +614,54 @@ public class TransactionsView
     private Func<Transaction, DateTime> Date = (item) => { return item.Date.Date; };
     private Func<Transaction, string> Payee = (item) => { return item.Payee; };
     private Func<Transaction, string> Description = (item) => { return item.Description; };
-    private Func<Transaction, string> Category = (item) => { return item.Category; };
     private Func<Transaction, decimal> Amount = (item) => { return item.Amount; };
     private Func<Transaction, AppliedState> AppliedState = (item) => { return item.AppliedState; };
     private Func<Transaction, string> AppliedToCategory = (item) => { return item.AppliedToCategory; };
+
+    /// <summary>
+    /// Expanded function for sorting by the Category field which takes
+    /// into account split transactions.
+    /// </summary>
+    private Func<Transaction, string> Category = (item) =>
+    {
+        return (item.SplitEntries != null && item.SplitEntries.Count > 0)
+             ? "--- Split ---"
+             : item.Category;
+    };
+
+    /// <summary>
+    /// Function used to sort based on whether or not the transaction is split.
+    /// </summary>
+    private Func<Transaction, bool> SplitIndicator = (item) => { return item.IsSplit; };
+
+    /// <summary>
+    /// Used to sort the CategoryAmountColumn based on a particular category.
+    /// </summary>
+    public class CategoryAmountColumnSorter
+    {
+        /// <summary>
+        /// Column the sorter applies to.
+        /// </summary>
+        private CategoryAmountColumn _column;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="column">Column sorter is used on.</param>
+        public CategoryAmountColumnSorter(CategoryAmountColumn column)
+        {
+            _column = column;
+        }
+
+        /// <summary>
+        /// Function which returns the amount of the transaction which applies
+        /// to the category of the CategoryAmountColumn.
+        /// </summary>
+        /// <param name="item">Transaction item.</param>
+        /// <returns>Amount of the transaction applying to the category.</returns>
+        public decimal Func(Transaction item)
+        {
+            return Transactions.AmountForPrimaryCategory(item, _column.PrimaryCategory);
+        }
+    }
 }
