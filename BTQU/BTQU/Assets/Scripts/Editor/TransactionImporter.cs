@@ -12,13 +12,15 @@ public class TransactionImporter
     /// The fields header in a credit account CSV file used to identify
     /// the file contents.
     /// </summary>
-    private const string CreditAccountFieldsHeader = "Type,Trans Date,Post Date,Description,Amount";
+    private const string CreditAccountFieldsHeader = "Type,Trans Date,Post Date,Description,Amount";  // Old
 
     /// <summary>
     /// The fields header in a debit account CSV file used to identify
     /// the file contents.
     /// </summary>
-    private const string DebitAccountFieldsHeader = "Type,Post Date,Description,Amount,Check or Slip #";
+    //private const string DebitAccountFieldsHeader = "Type,Post Date,Description,Amount,Check or Slip #"; // Old
+    // 2016/09/11
+    private const string DebitAccountFieldsHeader = "Details,Posting Date,Description,Amount,Type,Balance,Check or Slip #";
 
     /// <summary>
     /// Imports the transactions contained in the given file.
@@ -63,7 +65,7 @@ public class TransactionImporter
         {
             Debug.Log("Reading Debit Records");
 
-            var engine = new FileHelpers.FileHelperEngine<DebitRecord>();
+            var engine = new FileHelpers.FileHelperEngine<DebitRecord_20160911>();
             engine.ErrorManager.ErrorMode = FileHelpers.ErrorMode.SaveAndContinue;
             var records = engine.ReadFile(filePath);
 
@@ -77,7 +79,7 @@ public class TransactionImporter
             }
             else
             {
-                foreach (DebitRecord record in records)
+                foreach (DebitRecord_20160911 record in records)
                 {
                     record.description = record.description.Trim(' ', '\"');
                 }

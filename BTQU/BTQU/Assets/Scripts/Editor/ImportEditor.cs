@@ -24,8 +24,11 @@ public class ImportEditor : EditorWindow
 
     /// <summary>
     /// Debit account records to import.
+    /// TODO: create a better import editor which allows the user
+    /// to select the fields for import instead of rigidly defining
+    /// the input format.
     /// </summary>
-    private DebitRecord[] _debitRecords;
+    private DebitRecord_20160911[] _debitRecords;
 
     /// <summary>
     /// Flags indicating whether a record already exists (and will be skipped over for import).
@@ -60,7 +63,7 @@ public class ImportEditor : EditorWindow
     /// <param name="account">Account to import into.</param>
     /// <param name="records">Records to open with.</param>
     /// <param name="onImport">Callback to handle the imported transactions.</param>
-    public static void Open(Account account, DebitRecord[] records, Action<Transaction[]> onImport)
+    public static void Open(Account account, DebitRecord_20160911[] records, Action<Transaction[]> onImport)
     {
         ImportEditor editor = EditorWindow.GetWindow<ImportEditor>();
         editor.Initialize(account, records, onImport);
@@ -88,7 +91,7 @@ public class ImportEditor : EditorWindow
     /// <param name="account">Account to import into.</param>
     /// <param name="records">Records to initialize to.</param>
     /// <param name="onImport">Callback to handle the imported transactions.</param>
-    private void Initialize(Account account, DebitRecord[] records, Action<Transaction[]> onImport)
+    private void Initialize(Account account, DebitRecord_20160911[] records, Action<Transaction[]> onImport)
     {
         _account = account;
         _creditRecords = null;
@@ -116,11 +119,11 @@ public class ImportEditor : EditorWindow
     /// Initializes the existing flags for the given debit records.
     /// </summary>
     /// <param name="records">Records to initialize flags from.</param>
-    private void InitializeExistingFlags(DebitRecord[] records)
+    private void InitializeExistingFlags(DebitRecord_20160911[] records)
     {
         _recordExists = new Dictionary<object, bool>(records.Length);
 
-        foreach (DebitRecord record in records)
+        foreach (DebitRecord_20160911 record in records)
         {
             _recordExists.Add(record, _account.Transactions.Any(trans => MatchesRecord(trans, record)));
         }
@@ -148,7 +151,7 @@ public class ImportEditor : EditorWindow
     /// <param name="transaction">Transaction.</param>
     /// <param name="record">Record.</param>
     /// <returns>True if the given transaction and record match.</returns>
-    private bool MatchesRecord(Transaction transaction, DebitRecord record)
+    private bool MatchesRecord(Transaction transaction, DebitRecord_20160911 record)
     {
         ImportData importData = transaction.ImportData;
         return transaction.Amount == record.amount
@@ -218,7 +221,7 @@ public class ImportEditor : EditorWindow
         _scrollPos =
         EditorGUILayout.BeginScrollView(_scrollPos);
         {
-            foreach (DebitRecord record in _debitRecords)
+            foreach (DebitRecord_20160911 record in _debitRecords)
             {
                 DrawDebitRecord(record, _recordExists[record]);
             }
@@ -251,7 +254,7 @@ public class ImportEditor : EditorWindow
     /// </summary>
     /// <param name="record">Record to draw.</param>
     /// <param name="alreadyExists">Whether or not the transaction already exists in the account.</param>
-    private void DrawDebitRecord(DebitRecord record, bool alreadyExists)
+    private void DrawDebitRecord(DebitRecord_20160911 record, bool alreadyExists)
     {
         GUI.enabled = !alreadyExists;
         EditorGUILayout.BeginHorizontal("box");
@@ -316,7 +319,7 @@ public class ImportEditor : EditorWindow
     /// </summary>
     /// <param name="record">Record to create transaction from.</param>
     /// <returns>A transaction created from the given credit record.</returns>
-    private Transaction CreateTransaction(DebitRecord record)
+    private Transaction CreateTransaction(DebitRecord_20160911 record)
     {
         return new Transaction()
         {
